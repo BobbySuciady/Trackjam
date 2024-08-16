@@ -1,6 +1,20 @@
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
 ## Getting Started
+This is william typing, heres how to run the shit, i might still be sleeping
+
+1. npm install to install all dependencies
+2. go to .env.local and change the DATABASE_URL="mysql://root:JasonSQL20@@localhost:3306/trackjam" to DATABASE_URL="mysql://username:password@localhost:3306/databasename"
+  dont be stupid. dont literally write username, password, and databasename. If you havent already, go to mysqlworkbench, make a new schema called "trackjam" (this will be databasename), and use your username and password for the "mysql://username:password part of the DATABASE_URL. username is usually root, password make yourself.
+Sequelize will automatically create the tables and etc
+3. Run the shit, do npm run dev
+4. login through spotify
+5. after logged in go /dashboard
+6. and yeah its working, fuck u
+
+
+
+
 
 First, run the development server:
 
