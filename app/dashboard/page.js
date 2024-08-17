@@ -11,10 +11,15 @@ export default function Dashboard() {
   const [user, setUser] = useState(null);
   const [friendsData, setFriendsData] = useState([]);
   const [friendEmail, setFriendEmail] = useState('');
+  const [showPopup, setShowPopup] = useState(false);
+  const [selectedFriend, setSelectedFriend] = useState(null);
+  const [songTitle, setSongTitle] = useState('');
+  const [friendsListeningData, setFriendsListeningData] = useState([]); // Friends' listening data
   const [outOfViewUsers, setOutOfViewUsers] = useState([]);
   const router = useRouter();
   const observer = useRef();
 
+  // Fetch user and friends data
   const fetchUserData = useCallback(async () => {
     if (session && status === "authenticated") {
       try {
@@ -31,6 +36,15 @@ export default function Dashboard() {
           },
         });
         setFriendsData(friendsResponse.data);
+
+        // Fetch what friends are currently listening to
+        const friendsListeningResponse = await axios.get('/api/friends/currently-playing', {
+          headers: {
+            Authorization: `Bearer ${session.accessToken}`,
+          },
+        });
+        setFriendsListeningData(friendsListeningResponse.data);
+
       } catch (error) {
         console.error('Error fetching data:', error);
       }
@@ -41,6 +55,7 @@ export default function Dashboard() {
     fetchUserData();
   }, [fetchUserData]);
 
+  // Add a friend
   const addFriend = async () => {
     try {
       await axios.post('/api/friends', { friendEmail }, {
@@ -63,6 +78,39 @@ export default function Dashboard() {
     }
   };
 
+  // Send song quest to a friend
+  const sendSongQuest = (friend) => {
+    setSelectedFriend(friend);
+    setShowPopup(true);
+  };
+
+  const handleFormSubmit = async (event) => {
+    event.preventDefault();
+    if (status === "authenticated" && session && selectedFriend) {
+      try {
+        console.log("Sending song quest to:", selectedFriend.name);
+
+        await axios.post('/api/user/points', { action: 'add', friendId: selectedFriend.id }, {
+          headers: {
+            Authorization: `Bearer ${session.accessToken}`,
+          },
+        });
+
+        // Fetch updated user and friends data
+        fetchUserData();
+
+        // Close the popup after sending the quest
+        setShowPopup(false);
+        setSongTitle('');
+        setSelectedFriend(null);
+
+      } catch (error) {
+        console.error('Error sending song quest:', error);
+      }
+    }
+  };
+
+  // Calculate the staff position
   const getStaffPosition = (minutesListenedToday) => {
     return Math.floor(minutesListenedToday / 10);
   };
@@ -71,6 +119,7 @@ export default function Dashboard() {
     return Math.floor(Math.random() * 60) + 20; // Random X position between 20% and 80% of the container width
   };
 
+  // Handle out of view observer
   const handleObserver = (entries) => {
     const newOutOfViewUsers = [...outOfViewUsers]; // Copy the current state
     entries.forEach(entry => {
@@ -219,7 +268,7 @@ export default function Dashboard() {
         <h2 className="text-lg font-semibold mt-4">Your Listening Minutes</h2>
         <p className="mt-2 text-lg">You have listened to {user?.listeningMinutes || 0} minutes of music today.</p>
         
-        <h2 className="text-lg font-semibold mt-4">Your Friends Listening Minutes</h2>
+        <h2 className="text-lg font-semibold mt-4">Your Friends' Listening Minutes</h2>
         <ul className="mt-2">
           {friendsData.length === 0 ? (
             <p>No friends data available.</p>
@@ -227,6 +276,20 @@ export default function Dashboard() {
             friendsData.map((friend) => (
               <li key={friend.id} className="mt-1">
                 {friend.name}: {friend.listeningMinutes?.toFixed(2) || 0} minutes
+
+                {/* Display currently playing track if available */}
+                {friendsListeningData.find((f) => f.id === friend.id)?.currentlyPlaying ? (
+                  <div>
+                    <p>Track: {friendsListeningData.find((f) => f.id === friend.id).currentlyPlaying.trackName}</p>
+                    <p>Artist: {friendsListeningData.find((f) => f.id === friend.id).currentlyPlaying.artistName}</p>
+                    <p>Album: {friendsListeningData.find((f) => f.id === friend.id).currentlyPlaying.albumName}</p>
+                    <img src={friendsListeningData.find((f) => f.id === friend.id).currentlyPlaying.albumImage} alt="Album cover" width={100} />
+                  </div>
+                ) : (
+                  <p>Not listening to anything currently</p>
+                )}
+
+                <button onClick={() => sendSongQuest(friend)}>Send Song Quest</button>
               </li>
             ))
           )}
@@ -273,6 +336,27 @@ export default function Dashboard() {
           {user.name} {user.isAbove ? '↑' : '↓'}
         </button>
       ))}
+
+      {/* Popup Form */}
+      {showPopup && (
+        <div className="popup">
+          <div className="popup-inner">
+            <h2>Send Song Quest to {selectedFriend?.name}</h2>
+            <form onSubmit={handleFormSubmit}>
+              <label>
+                Song Title:
+                <input 
+                  type="text" 
+                  value={songTitle}
+                  onChange={(e) => setSongTitle(e.target.value)}
+                />
+              </label>
+              <button type="submit">Send</button>
+              <button type="button" onClick={() => setShowPopup(false)}>Cancel</button>
+            </form>
+          </div>
+        </div>
+      )}
 
     </div>
   );
