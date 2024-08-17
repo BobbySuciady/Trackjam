@@ -1,4 +1,3 @@
-// models/User.js
 import { DataTypes } from 'sequelize';
 import sequelize from '../lib/sequelize';
 
@@ -23,6 +22,9 @@ const User = sequelize.define('User', {
     defaultValue: 100,
   },
   listeningMinutes: DataTypes.FLOAT,
+  lastPlayedTrackName: DataTypes.STRING, // New field for the track name
+  lastPlayedTrackArtist: DataTypes.STRING, // New field for the artist name
+  lastPlayedTrackAlbumImage: DataTypes.STRING, // New field for the album image URL
 });
 
 // Define the self-referencing many-to-many relationship

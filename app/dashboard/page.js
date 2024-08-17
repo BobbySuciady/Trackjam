@@ -5,6 +5,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import Link from 'next/link';
 
 export default function Dashboard() {
   const { data: session, status } = useSession();
@@ -14,8 +15,8 @@ export default function Dashboard() {
   const [showPopup, setShowPopup] = useState(false);
   const [selectedFriend, setSelectedFriend] = useState(null);
   const [songTitle, setSongTitle] = useState('');
-  const [friendsListeningData, setFriendsListeningData] = useState([]); // Friends' listening data
   const [outOfViewUsers, setOutOfViewUsers] = useState([]);
+  const [selectedPerson, setSelectedPerson] = useState(null); 
   const router = useRouter();
   const observer = useRef();
 
@@ -37,14 +38,6 @@ export default function Dashboard() {
         });
         setFriendsData(friendsResponse.data);
 
-        // Fetch what friends are currently listening to
-        const friendsListeningResponse = await axios.get('/api/friends/currently-playing', {
-          headers: {
-            Authorization: `Bearer ${session.accessToken}`,
-          },
-        });
-        setFriendsListeningData(friendsListeningResponse.data);
-
       } catch (error) {
         console.error('Error fetching data:', error);
       }
@@ -60,7 +53,7 @@ export default function Dashboard() {
     try {
       await axios.post('/api/friends', { friendEmail }, {
         headers: {
-            Authorization: `Bearer ${session.accessToken}`,
+          Authorization: `Bearer ${session.accessToken}`,
         },
       });
   
@@ -116,17 +109,16 @@ export default function Dashboard() {
   };
 
   const getRandomXPosition = () => {
-    return Math.floor(Math.random() * 60) + 20; // Random X position between 20% and 80% of the container width
+    return Math.floor(Math.random() * 60) + 20;
   };
 
   // Handle out of view observer
   const handleObserver = (entries) => {
-    const newOutOfViewUsers = [...outOfViewUsers]; // Copy the current state
+    const newOutOfViewUsers = [...outOfViewUsers];
     entries.forEach(entry => {
       const name = entry.target.dataset.name;
       const isInView = entry.isIntersecting;
 
-      // Check if the person is in view or not
       if (!isInView) {
         const boundingRect = entry.boundingClientRect;
         const isAboveViewport = boundingRect.top < 0;
@@ -140,7 +132,6 @@ export default function Dashboard() {
           });
         }
       } else {
-        // If the person comes back into view, remove them from the outOfViewUsers list
         const index = newOutOfViewUsers.findIndex(user => user.name === name);
         if (index !== -1) {
           newOutOfViewUsers.splice(index, 1);
@@ -148,13 +139,19 @@ export default function Dashboard() {
       }
     });
 
-    setOutOfViewUsers(newOutOfViewUsers); // Update the state with the new list
+    setOutOfViewUsers(newOutOfViewUsers);
+  };
+
+  const handleClickOutside = (event) => {
+    if (event.target.closest('.selected-person') === null) {
+      setSelectedPerson(null);
+    }
   };
 
   const renderNumberList = () => {
     const numbers = [];
     for (let i = 40; i >= 0; i--) {
-      numbers.push(i.toString().padStart(2, '0')); // Pads single digits with a leading 0
+      numbers.push(i.toString().padStart(2, '0'));
     }
     return numbers.map((number, index) => {
       const staffPosition = parseInt(number);
@@ -164,19 +161,17 @@ export default function Dashboard() {
           <div className="absolute inset-0 flex justify-left items-center pl-2">
             <span className="font-bold text-3xl">{number}</span>
           </div>
-          {/* Additional lines within the box */}
           <div className="absolute inset-0 top-1/6 border-t border-black"></div>
           <div className="absolute inset-0 top-1/3 border-t border-black"></div>
           <div className="absolute inset-0 top-1/2 border-t border-black"></div>
           <div className="absolute inset-0 top-2/3 border-t border-black"></div>
           <div className="absolute inset-0 top-5/6 border-t border-black"></div>
         
-          {/* Render the user's image if their position matches the current staff position */}
           {user && getStaffPosition(user.listeningMinutes) === staffPosition && (
             <Image
-              src="/Person1.png"
+              src={selectedPerson === 'user' ? "/Person1Selected.png" : "/Person1.png"}
               alt="User"
-              className="absolute"
+              className="absolute cursor-pointer selected-person"
               style={{ left: `${getRandomXPosition()}%`, top: 37 }}
               width={100}
               height={100}
@@ -186,17 +181,17 @@ export default function Dashboard() {
                   observer.current.observe(el);
                 }
               }}
+              onClick={() => setSelectedPerson('user')}
             />
           )}
 
-          {/* Render each friend's image if their position matches the current staff position */}
           {friendsData.map((friend, friendIndex) => (
             getStaffPosition(friend.listeningMinutes) === staffPosition && (
               <Image
                 key={friend.id}
-                src={`/Person${friendIndex + 2}.png`} // Assuming you have Person2.png, Person3.png, etc.
+                src={selectedPerson === `friend${friendIndex}` ? `/Person${friendIndex + 2}Selected.png` : `/Person${friendIndex + 2}.png`}
                 alt={friend.name}
-                className="absolute"
+                className="absolute cursor-pointer selected-person"
                 style={{ left: `${getRandomXPosition()}%`, top: 34 }}
                 width={100}
                 height={100}
@@ -206,6 +201,7 @@ export default function Dashboard() {
                     observer.current.observe(el);
                   }
                 }}
+                onClick={() => setSelectedPerson(`friend${friendIndex}`)}
               />
             )
           ))}
@@ -225,9 +221,16 @@ export default function Dashboard() {
     observer.current = new IntersectionObserver(handleObserver, {
       root: null,
       rootMargin: '0px',
-      threshold: 0.1, // Adjust the threshold as needed
+      threshold: 0.1,
     });
     return () => observer.current.disconnect();
+  }, []);
+
+  useEffect(() => {
+    document.addEventListener('click', handleClickOutside);
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
   }, []);
 
   if (status === "loading") {
@@ -240,12 +243,10 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="bg-gray-300 min-h-screen p-4 flex justify-center items-center relative">
+    <div className="bg-gray-300 min-h-screen flex justify-center items-center relative">
       <div className="bg-white max-w-sm w-full min-h-screen rounded-lg shadow-md flex flex-col items-center">
         
-        {/* Sticky Header Package */}
         <div className="w-full bg-white rounded-b-lg border-black border-b-2 shadow-custom flex items-center flex-col sticky top-0 z-10">
-          {/* iPhone-like Header */}
           <Image
             src={"/Header.png"}
             alt={"iPhone header"}
@@ -266,9 +267,9 @@ export default function Dashboard() {
 
         <h1 className="text-xl font-semibold">Welcome, {session.user.name}</h1>
         <h2 className="text-lg font-semibold mt-4">Your Listening Minutes</h2>
-        <p className="mt-2 text-lg">You have listened to {user?.listeningMinutes || 0} minutes of music today.</p>
+        <p className="mt-2 text-lg">You have listened to {user?.listeningMinutes.toFixed(2) || 0} minutes of music today.</p>
         
-        <h2 className="text-lg font-semibold mt-4">Your Friends' Listening Minutes</h2>
+        <h2 className="text-lg font-semibold mt-4">Your Friends' Last Played Tracks</h2>
         <ul className="mt-2">
           {friendsData.length === 0 ? (
             <p>No friends data available.</p>
@@ -277,16 +278,15 @@ export default function Dashboard() {
               <li key={friend.id} className="mt-1">
                 {friend.name}: {friend.listeningMinutes?.toFixed(2) || 0} minutes
 
-                {/* Display currently playing track if available */}
-                {friendsListeningData.find((f) => f.id === friend.id)?.currentlyPlaying ? (
+                {friend.lastPlayedTrack ? (
                   <div>
-                    <p>Track: {friendsListeningData.find((f) => f.id === friend.id).currentlyPlaying.trackName}</p>
-                    <p>Artist: {friendsListeningData.find((f) => f.id === friend.id).currentlyPlaying.artistName}</p>
-                    <p>Album: {friendsListeningData.find((f) => f.id === friend.id).currentlyPlaying.albumName}</p>
-                    <img src={friendsListeningData.find((f) => f.id === friend.id).currentlyPlaying.albumImage} alt="Album cover" width={100} />
+                    <p>Track: {friend.lastPlayedTrack.trackName}</p>
+                    <p>Artist: {friend.lastPlayedTrack.artistName}</p>
+                    <p>Album: {friend.lastPlayedTrack.albumName}</p>
+                    <img src={friend.lastPlayedTrack.albumImage} alt={`${friend.lastPlayedTrack.trackName} album cover`} width={100} />
                   </div>
                 ) : (
-                  <p>Not listening to anything currently</p>
+                  <p>No recently played track available.</p>
                 )}
 
                 <button onClick={() => sendSongQuest(friend)}>Send Song Quest</button>
@@ -319,6 +319,116 @@ export default function Dashboard() {
           {renderNumberList()}
         </div>
 
+        <div className="flex flex-col justify-center items-center w-full bg-purple-700">
+        {/* Display the selected person's details */}
+        {selectedPerson && (
+          <div className="fixed bottom-20 w-full left-1/2 transform -translate-x-1/2 text-white bg-pink-600 rounded shadow-md z-50 h-1/2">
+          {selectedPerson === 'user' ? (
+            <div className="h-full flex flex-col">
+            {/* Top 1/3 section with purple background and name */}
+            <div className="bg-purple-600 flex flex-col justify-center h-1/3 rounded-t p-9">
+              <div className="flex items-center justify-between w-full">
+                <div className="flex items-center">
+                  <Image
+                    src={`/blankpfp.png`}  // Replace with the correct path to the user's profile picture
+                    alt={`${session.user.name} Profile`}
+                    width={50}
+                    height={50}
+                    className="rounded-full mr-2"
+                  />
+                  <h3 className="font-bold text-xl">{session.user.name}</h3>
+                </div>
+                <h3 className="font-bold text-xl">{user?.listeningMinutes} pts</h3>
+              </div>
+            </div>
+            {/* Bottom 2/3 section, empty */}
+            <div className="flex-grow flex items-center justify-center">
+              <p className="font-bold">Your Points: {user?.listeningMinutes}</p>
+            </div>
+          </div>
+          ) : (
+            friendsData.map((friend, index) => (
+              selectedPerson === `friend${index}` && (
+                <div key={friend.id} className="h-full flex flex-col">
+                  {/* Top 1/3 section with purple background and name */}
+                  <div className="bg-purple-600 flex flex-col justify-center h-1/3 rounded-t p-9">
+                    <div className="flex items-center justify-between w-full">
+                        <div className="flex items-center">
+                        <Image
+                            src={`/blankpfp.png`}  // Replace with the correct path to the friend's profile picture
+                            alt={`${friend.name} Profile`}
+                            width={50}
+                            height={50}
+                            className="rounded-full mr-2"
+                        />
+                        <h3 className="font-bold text-xl">{friend.name}</h3>
+                        </div>
+                        <h3 className="font-bold text-xl">{friend.listeningMinutes} pts</h3>
+                    </div>
+                    <div className="flex justify-center mt-2">
+                        <button 
+                            onClick={() => sendSongQuest(friend)} 
+                            className="bg-blue-500 text-white p-2 rounded w-1/2 text-center"
+                        >
+                            Send Song Quest
+                        </button>
+                    </div>
+                </div>
+                  {/* Bottom 2/3 section, empty */}
+                  <div className="flex-grow flex items-center justify-center">
+                    <p className="font-bold">Points: {friend.listeningMinutes}</p>
+                  </div>
+                </div>
+              )
+            ))
+          )}
+        </div>        
+        )}
+
+          {/* NAVBAR */}
+          <div className="fixed bottom-0 w-full grid grid-cols-4 gap-8 px-4 py-4 w-full justify-center items-center bg-purple-700">
+            <Image
+              src="/Home.png"
+              alt="Home"
+              width={50}
+              height={50}
+            />
+
+            <Link href="/search">
+              <Image
+                src="/Search.png"
+                alt="Search"
+                width={50}
+                height={50}
+              />
+            </Link>
+
+            <Link href="/leaderboard">
+              <Image
+                src="/Barchart.png"
+              alt="Barchart"
+              width={50}
+              height={50}
+              />
+            </Link>
+
+            <Link href="/profile">
+              <Image
+                src="/Profile.png"
+                alt="Profile"
+                width={50}
+                height={50}
+              />
+            </Link>
+          </div>
+
+          <Image
+            src="/FooterBar.png"
+            alt="Footer Bar"
+            width={250}
+            height={250}
+          />
+        </div>
       </div>
 
       {/* Out of view arrows */}
@@ -328,7 +438,7 @@ export default function Dashboard() {
           className="bg-blue-500 text-white p-2 rounded fixed z-50 transform -translate-x-1/2"
           style={{
             left: `${user.xPosition}%`,
-            top: user.isAbove ? '10px' : 'auto',
+            top: user.isAbove ? '100px' : 'auto',
             bottom: user.isAbove ? 'auto' : '10px',
           }}
           onClick={() => scrollToUser(user.name)}
@@ -337,7 +447,6 @@ export default function Dashboard() {
         </button>
       ))}
 
-      {/* Popup Form */}
       {showPopup && (
         <div className="popup">
           <div className="popup-inner">
@@ -357,7 +466,6 @@ export default function Dashboard() {
           </div>
         </div>
       )}
-
     </div>
   );
 }
