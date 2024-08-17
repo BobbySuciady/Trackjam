@@ -1,7 +1,7 @@
 // pages/api/user/index.js
 import { getSession } from 'next-auth/react';
 import User from '../../../models/User';
-import { getTodayListeningMinutes } from '../../../lib/spotify';
+import { getLastPlayedTrack, getTodayListeningMinutes } from '../../../lib/spotify';
 
 export default async function handler(req, res) {
     const session = await getSession({ req });
@@ -25,9 +25,14 @@ export default async function handler(req, res) {
         if (spotifyAccessToken) {
             // Get today's listening minutes
             const listeningMinutes = await getTodayListeningMinutes(spotifyAccessToken);
+            const lastPlayedTrack = await getLastPlayedTrack(spotifyAccessToken);
 
             // Update the user's listening minutes in the database
             currentUser.listeningMinutes = listeningMinutes;
+            currentUser.lastPlayedTrackName = lastPlayedTrack?.trackName || null;
+            currentUser.lastPlayedTrackAlbumImage = lastPlayedTrack?.albumImage || null;
+            currentUser.lastPlayedTrackArtist = lastPlayedTrack?.artistName || null;
+
             await currentUser.save();
         } else {
             console.warn('No Spotify access token provided in the Authorization header.');
