@@ -18,6 +18,10 @@ const User = sequelize.define('User', {
     type: DataTypes.STRING,
     unique: true,
   },
+  points: {
+    type: DataTypes.FLOAT,
+    defaultValue: 100,
+  },
   listeningMinutes: DataTypes.FLOAT,
 });
 

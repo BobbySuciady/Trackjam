@@ -37,6 +37,7 @@ req.body = body ;
       const friendsData = currentUser.Friends.map(friend => ({
         id: friend.id,
         name: friend.name,
+        points: friend.points,
         listeningMinutes: friend.listeningMinutes,
       }));
 
