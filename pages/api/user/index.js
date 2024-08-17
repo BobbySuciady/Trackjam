@@ -21,6 +21,7 @@ export default async function handler(req, res) {
       email: currentUser.email,
       name: currentUser.name,
       spotifyId: currentUser.spotifyId,
+      points: currentUser.points,
       listeningMinutes: currentUser.listeningMinutes,
     });
   } catch (error) {
