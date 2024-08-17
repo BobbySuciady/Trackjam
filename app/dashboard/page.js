@@ -15,9 +15,8 @@ export default function Dashboard() {
   const [showPopup, setShowPopup] = useState(false);
   const [selectedFriend, setSelectedFriend] = useState(null);
   const [songTitle, setSongTitle] = useState('');
-  const [friendsListeningData, setFriendsListeningData] = useState([]); // Friends' listening data
   const [outOfViewUsers, setOutOfViewUsers] = useState([]);
-  const [selectedPerson, setSelectedPerson] = useState(null); // State to track selected person
+  const [selectedPerson, setSelectedPerson] = useState(null); 
   const router = useRouter();
   const observer = useRef();
 
@@ -38,14 +37,6 @@ export default function Dashboard() {
           },
         });
         setFriendsData(friendsResponse.data);
-
-        // Fetch what friends are currently listening to
-        const friendsListeningResponse = await axios.get('/api/friends/currently-playing', {
-          headers: {
-            Authorization: `Bearer ${session.accessToken}`,
-          },
-        });
-        setFriendsListeningData(friendsListeningResponse.data);
 
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -118,17 +109,16 @@ export default function Dashboard() {
   };
 
   const getRandomXPosition = () => {
-    return Math.floor(Math.random() * 60) + 20; // Random X position between 20% and 80% of the container width
+    return Math.floor(Math.random() * 60) + 20;
   };
 
   // Handle out of view observer
   const handleObserver = (entries) => {
-    const newOutOfViewUsers = [...outOfViewUsers]; // Copy the current state
+    const newOutOfViewUsers = [...outOfViewUsers];
     entries.forEach(entry => {
       const name = entry.target.dataset.name;
       const isInView = entry.isIntersecting;
 
-      // Check if the person is in view or not
       if (!isInView) {
         const boundingRect = entry.boundingClientRect;
         const isAboveViewport = boundingRect.top < 0;
@@ -142,7 +132,6 @@ export default function Dashboard() {
           });
         }
       } else {
-        // If the person comes back into view, remove them from the outOfViewUsers list
         const index = newOutOfViewUsers.findIndex(user => user.name === name);
         if (index !== -1) {
           newOutOfViewUsers.splice(index, 1);
@@ -150,7 +139,7 @@ export default function Dashboard() {
       }
     });
 
-    setOutOfViewUsers(newOutOfViewUsers); // Update the state with the new list
+    setOutOfViewUsers(newOutOfViewUsers);
   };
 
   const handleClickOutside = (event) => {
@@ -162,7 +151,7 @@ export default function Dashboard() {
   const renderNumberList = () => {
     const numbers = [];
     for (let i = 40; i >= 0; i--) {
-      numbers.push(i.toString().padStart(2, '0')); // Pads single digits with a leading 0
+      numbers.push(i.toString().padStart(2, '0'));
     }
     return numbers.map((number, index) => {
       const staffPosition = parseInt(number);
@@ -172,14 +161,12 @@ export default function Dashboard() {
           <div className="absolute inset-0 flex justify-left items-center pl-2">
             <span className="font-bold text-3xl">{number}</span>
           </div>
-          {/* Additional lines within the box */}
           <div className="absolute inset-0 top-1/6 border-t border-black"></div>
           <div className="absolute inset-0 top-1/3 border-t border-black"></div>
           <div className="absolute inset-0 top-1/2 border-t border-black"></div>
           <div className="absolute inset-0 top-2/3 border-t border-black"></div>
           <div className="absolute inset-0 top-5/6 border-t border-black"></div>
         
-          {/* Render the user's image if their position matches the current staff position */}
           {user && getStaffPosition(user.listeningMinutes) === staffPosition && (
             <Image
               src={selectedPerson === 'user' ? "/Person1Selected.png" : "/Person1.png"}
@@ -198,7 +185,6 @@ export default function Dashboard() {
             />
           )}
 
-          {/* Render each friend's image if their position matches the current staff position */}
           {friendsData.map((friend, friendIndex) => (
             getStaffPosition(friend.listeningMinutes) === staffPosition && (
               <Image
@@ -235,7 +221,7 @@ export default function Dashboard() {
     observer.current = new IntersectionObserver(handleObserver, {
       root: null,
       rootMargin: '0px',
-      threshold: 0.1, // Adjust the threshold as needed
+      threshold: 0.1,
     });
     return () => observer.current.disconnect();
   }, []);
@@ -260,9 +246,7 @@ export default function Dashboard() {
     <div className="bg-gray-300 min-h-screen flex justify-center items-center relative">
       <div className="bg-white max-w-sm w-full min-h-screen rounded-lg shadow-md flex flex-col items-center">
         
-        {/* Sticky Header Package */}
         <div className="w-full bg-white rounded-b-lg border-black border-b-2 shadow-custom flex items-center flex-col sticky top-0 z-10">
-          {/* iPhone-like Header */}
           <Image
             src={"/Header.png"}
             alt={"iPhone header"}
@@ -283,9 +267,9 @@ export default function Dashboard() {
 
         <h1 className="text-xl font-semibold">Welcome, {session.user.name}</h1>
         <h2 className="text-lg font-semibold mt-4">Your Listening Minutes</h2>
-        <p className="mt-2 text-lg">You have listened to {user?.listeningMinutes || 0} minutes of music today.</p>
+        <p className="mt-2 text-lg">You have listened to {user?.listeningMinutes.toFixed(2) || 0} minutes of music today.</p>
         
-        <h2 className="text-lg font-semibold mt-4">Your Friends' Listening Minutes</h2>
+        <h2 className="text-lg font-semibold mt-4">Your Friends' Last Played Tracks</h2>
         <ul className="mt-2">
           {friendsData.length === 0 ? (
             <p>No friends data available.</p>
@@ -294,16 +278,15 @@ export default function Dashboard() {
               <li key={friend.id} className="mt-1">
                 {friend.name}: {friend.listeningMinutes?.toFixed(2) || 0} minutes
 
-                {/* Display currently playing track if available */}
-                {friendsListeningData.find((f) => f.id === friend.id)?.currentlyPlaying ? (
+                {friend.lastPlayedTrack ? (
                   <div>
-                    <p>Track: {friendsListeningData.find((f) => f.id === friend.id).currentlyPlaying.trackName}</p>
-                    <p>Artist: {friendsListeningData.find((f) => f.id === friend.id).currentlyPlaying.artistName}</p>
-                    <p>Album: {friendsListeningData.find((f) => f.id === friend.id).currentlyPlaying.albumName}</p>
-                    <img src={friendsListeningData.find((f) => f.id === friend.id).currentlyPlaying.albumImage} alt="Album cover" width={100} />
+                    <p>Track: {friend.lastPlayedTrack.trackName}</p>
+                    <p>Artist: {friend.lastPlayedTrack.artistName}</p>
+                    <p>Album: {friend.lastPlayedTrack.albumName}</p>
+                    <img src={friend.lastPlayedTrack.albumImage} alt={`${friend.lastPlayedTrack.trackName} album cover`} width={100} />
                   </div>
                 ) : (
-                  <p>Not listening to anything currently</p>
+                  <p>No recently played track available.</p>
                 )}
 
                 <button onClick={() => sendSongQuest(friend)}>Send Song Quest</button>
@@ -423,9 +406,9 @@ export default function Dashboard() {
             <Link href="/leaderboard">
               <Image
                 src="/Barchart.png"
-                alt="Barchart"
-                width={50}
-                height={50}
+              alt="Barchart"
+              width={50}
+              height={50}
               />
             </Link>
 
@@ -446,7 +429,6 @@ export default function Dashboard() {
             height={250}
           />
         </div>
-
       </div>
 
       {/* Out of view arrows */}
@@ -465,7 +447,6 @@ export default function Dashboard() {
         </button>
       ))}
 
-      {/* Popup Form */}
       {showPopup && (
         <div className="popup">
           <div className="popup-inner">
@@ -485,7 +466,6 @@ export default function Dashboard() {
           </div>
         </div>
       )}
-
     </div>
   );
 }

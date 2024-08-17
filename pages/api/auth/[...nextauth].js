@@ -1,25 +1,22 @@
-// pages/api/auth/[...nextauth].js
 import NextAuth from 'next-auth';
 import SpotifyProvider from 'next-auth/providers/spotify';
-import sequelize from '../../../lib/sequelize';
+import sequelize, { syncDatabase } from '../../../lib/sequelize';
 import User from '../../../models/User';
-import { getTodayListeningMinutes } from '../../../lib/spotify';
+import { getTodayListeningMinutes, getLastPlayedTrack } from '../../../lib/spotify';
 
 export default NextAuth({
   providers: [
     SpotifyProvider({
       clientId: process.env.SPOTIFY_CLIENT_ID,
       clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
-      authorization: 'https://accounts.spotify.com/authorize?scope=user-read-email user-read-recently-played user-read-currently-playing',
+      authorization: 'https://accounts.spotify.com/authorize?scope=user-read-email user-read-recently-played',
     }),
   ],
   callbacks: {
     async signIn({ user, account, profile }) {
       try {
-        // Synchronize all defined models with the database
-        await sequelize.sync();
+        await syncDatabase(); // Sync the database when a user signs in
 
-        // Check if the user exists in the database, otherwise create a new user
         const [existingUser, created] = await User.findOrCreate({
           where: { email: user.email },
           defaults: {
@@ -47,14 +44,20 @@ export default NextAuth({
     async session({ session, token }) {
       session.accessToken = token.accessToken;
 
-      // Fetch today's listening minutes
       if (token.accessToken) {
         const minutesListenedToday = await getTodayListeningMinutes(token.accessToken);
-        session.user.minutesListenedToday = minutesListenedToday;
+        const lastPlayedTrack = await getLastPlayedTrack(token.accessToken);
 
-        // Update the user's listening minutes in the database
+        session.user.minutesListenedToday = minutesListenedToday;
+        session.user.lastPlayedTrack = lastPlayedTrack;
+
         await User.update(
-          { listeningMinutes: minutesListenedToday },
+          {
+            listeningMinutes: minutesListenedToday,
+            lastPlayedTrackName: lastPlayedTrack?.trackName || null,
+            lastPlayedTrackArtist: lastPlayedTrack?.artistName || null,
+            lastPlayedTrackAlbumImage: lastPlayedTrack?.albumImage || null,
+          },
           { where: { email: session.user.email } }
         );
       }
