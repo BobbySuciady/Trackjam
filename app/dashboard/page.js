@@ -339,29 +339,71 @@ export default function Dashboard() {
         <div className="flex flex-col justify-center items-center w-full bg-purple-700">
         {/* Display the selected person's details */}
         {selectedPerson && (
-          <div className="fixed bottom-10 left-1/2 transform -translate-x-1/2 w-100 text-white bg-pink-600 p-4 rounded shadow-md z-50">
-            {selectedPerson === 'user' ? (
-              <div>
-                <h3 className="font-bold">Realify's Points</h3>
-                <p>{user?.listeningMinutes} points</p>
+          <div className="fixed bottom-20 w-full left-1/2 transform -translate-x-1/2 text-white bg-pink-600 rounded shadow-md z-50 h-1/2">
+          {selectedPerson === 'user' ? (
+            <div className="h-full flex flex-col">
+            {/* Top 1/3 section with purple background and name */}
+            <div className="bg-purple-600 flex flex-col justify-center h-1/3 rounded-t p-9">
+              <div className="flex items-center justify-between w-full">
+                <div className="flex items-center">
+                  <Image
+                    src={`/blankpfp.png`}  // Replace with the correct path to the user's profile picture
+                    alt={`${session.user.name} Profile`}
+                    width={50}
+                    height={50}
+                    className="rounded-full mr-2"
+                  />
+                  <h3 className="font-bold text-xl">{session.user.name}</h3>
+                </div>
+                <h3 className="font-bold text-xl">{user?.listeningMinutes} pts</h3>
               </div>
-            ) : (
-              friendsData.map((friend, index) => (
-                selectedPerson === `friend${index}` && (
-                  <div key={friend.id}>
-                    <h3 className="font-bold">{friend.name}'s Points</h3>
-                    <p>{friend.listeningMinutes} points</p>
+            </div>
+            {/* Bottom 2/3 section, empty */}
+            <div className="flex-grow flex items-center justify-center">
+              <p className="font-bold">Your Points: {user?.listeningMinutes}</p>
+            </div>
+          </div>
+          ) : (
+            friendsData.map((friend, index) => (
+              selectedPerson === `friend${index}` && (
+                <div key={friend.id} className="h-full flex flex-col">
+                  {/* Top 1/3 section with purple background and name */}
+                  <div className="bg-purple-600 flex flex-col justify-center h-1/3 rounded-t p-9">
+                    <div className="flex items-center justify-between w-full">
+                        <div className="flex items-center">
+                        <Image
+                            src={`/blankpfp.png`}  // Replace with the correct path to the friend's profile picture
+                            alt={`${friend.name} Profile`}
+                            width={50}
+                            height={50}
+                            className="rounded-full mr-2"
+                        />
+                        <h3 className="font-bold text-xl">{friend.name}</h3>
+                        </div>
+                        <h3 className="font-bold text-xl">{friend.listeningMinutes} pts</h3>
+                    </div>
+                    <div className="flex justify-center mt-2">
+                        <button 
+                            onClick={() => sendSongQuest(friend)} 
+                            className="bg-blue-500 text-white p-2 rounded w-1/2 text-center"
+                        >
+                            Send Song Quest
+                        </button>
+                    </div>
+                </div>
+                  {/* Bottom 2/3 section, empty */}
+                  <div className="flex-grow flex items-center justify-center">
+                    <p className="font-bold">Points: {friend.listeningMinutes}</p>
                   </div>
-                )
-              ))
-            )}
-          </div>
+                </div>
+              )
+            ))
+          )}
+        </div>        
         )}
-          <div className="w-full h-100 bg-pink-600">
-            {/* WILLIAM CONTINUE HERE FOR DASHBOARD PAGE*/}
 
-          </div>
-          <div className="grid grid-cols-4 gap-8 px-4 py-4 w-full justify-center items-center">
+          {/* NAVBAR */}
+          <div className="fixed bottom-0 w-full grid grid-cols-4 gap-8 px-4 py-4 w-full justify-center items-center bg-purple-700">
             <Image
               src="/Home.png"
               alt="Home"
