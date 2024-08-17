@@ -268,7 +268,8 @@ export default function Dashboard() {
         <h1 className="text-xl font-semibold">Welcome, {session.user.name}</h1>
         <h2 className="text-lg font-semibold mt-4">Your Listening Minutes</h2>
         <p className="mt-2 text-lg">You have listened to {user?.listeningMinutes.toFixed(2) || 0} minutes of music today.</p>
-        
+        <p className="mt-2 text-lg">Your points {user?.points.toFixed(0) || 0}</p>
+
         <h2 className="text-lg font-semibold mt-4">Your Friends' Last Played Tracks</h2>
         <ul className="mt-2">
           {friendsData.length === 0 ? (
@@ -276,11 +277,11 @@ export default function Dashboard() {
           ) : (
             friendsData.map((friend) => (
               <li key={friend.id} className="mt-1">
-                {friend.name}: {friend.listeningMinutes?.toFixed(2) || 0} minutes
+                {friend.name}: {friend.listeningMinutes?.toFixed(2) || 0} minutes & {friend.points?.toFixed(0) || 0} points
 
                 {friend.lastPlayedTrack ? (
                   <div>
-                    <p>Track: {friend.lastPlayedTrack.trackName}</p>
+                    <p>Last Played Track: {friend.lastPlayedTrack.trackName}</p>
                     <p>Artist: {friend.lastPlayedTrack.artistName}</p>
                     <p>Album: {friend.lastPlayedTrack.albumName}</p>
                     <img src={friend.lastPlayedTrack.albumImage} alt={`${friend.lastPlayedTrack.trackName} album cover`} width={100} />
@@ -289,7 +290,19 @@ export default function Dashboard() {
                   <p>No recently played track available.</p>
                 )}
 
-                <button onClick={() => sendSongQuest(friend)}>Send Song Quest</button>
+                <h3 className="text-lg font-semibold mt-4">Top 4 Tracks</h3>
+                <div className="grid grid-cols-2 gap-4 mt-2">
+                  {friend.topTracks?.map((track, index) => (
+                    <div key={index} className="flex flex-col items-center">
+                      <img src={track.albumImage} alt={`Album cover for ${track.trackName}`} width={80} height={80} />
+                      <p className="text-sm text-center mt-2">{track.trackName}</p>
+                    </div>
+                  ))}
+                </div>
+
+                <button onClick={() => sendSongQuest(friend)} className="mt-2 bg-blue-500 text-white p-2 rounded">
+                  Send Song Quest
+                </button>
               </li>
             ))
           )}

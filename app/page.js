@@ -9,64 +9,80 @@ export default function HomePage() {
   const router = useRouter();
 
   if (session) {
-    // If the user is logged in, redirect to the dashboard
     router.push('/dashboard');
-    return null; // This prevents rendering anything while redirecting
+    return null;
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-24">
-      <div style={styles.container}>
-        {/* Onboarding and Login Section */}
+    <main className="bg-gray-300 min-h-screen flex justify-center items-center">
+      <div className="bg-white max-w-sm w-full min-h-screen rounded-lg shadow-md flex flex-col items-center">
         {!session ? (
           <>
-            <div style={styles.headerImage}>
+            {/* iPhone-like Header */}
+            <div className="relative w-full mb-6">
               <Image
-                src="/headerPicture.png"
-                alt="Piano Tiles"
-                layout="responsive"
-                width={1000}
-                height={500}
-                priority
+                src="/Header.png"
+                alt="iPhone header"
+                width={450}
+                height={50}
+                className="w-full rounded-t-lg"
               />
+              <div className="absolute inset-x-0 top-20 flex justify-center">
+                <Image
+                  src="/trackJamLogo.png"
+                  alt="TrackJam Logo"
+                  width={150}
+                  height={150}
+                  className="w-40 h-40" // Larger to avoid cropping
+                />
+              </div>
             </div>
 
-            <div style={styles.logoImage}>
-              <Image
-                src="/trackJamLogo.png"
-                alt="TrackJam Logo"
-                layout="intrinsic"
-                width={200}
-                height={100}
-              />
-            </div>
-
-            <div style={styles.textSection}>
-              <h1>Stream, team, and reign supreme with TrackJam!</h1>
-              <p>
-                Compare your Spotify listening minutes, challenge friends, and climb the leaderboard.
-                Share song recommendations to earn points and expand your musical horizons.
+            {/* Text Section */}
+            <div className="text-center mt-40 px-4">
+              <h1 className="text-2xl font-bold">Stream, team, and reign supreme with TrackJam!</h1>
+              <p className="mt-4 text-lg">
+                Compare your Spotify listening minutes, challenge friends, and climb the leaderboard. Share song recommendations to earn points and expand your musical horizons.
               </p>
             </div>
 
-            <div style={styles.buttonContainer}>
-              <button style={styles.signupButton} onClick={() => signIn('spotify')}>
+            {/* Buttons Section */}
+            <div className="flex flex-col items-center gap-4 mt-auto mb-24 w-full px-4">
+              <button 
+                className="bg-green-600 text-white py-2 px-6 rounded-lg text-lg w-full"
+                onClick={() => signIn('spotify')}
+              >
                 Sign up with Spotify
               </button>
-              <button style={styles.loginButton} disabled>
+              <button 
+                className="bg-gray-400 text-white py-2 px-6 rounded-lg text-lg w-full"
+                disabled
+              >
                 Log in
               </button>
+            </div>
+
+            {/* iPhone-like Footer */}
+            <div className="w-full">
+              <Image
+                src="/FooterBar.png"
+                alt="iPhone footer"
+                width={450}
+                height={50}
+                className="w-full"
+              />
             </div>
           </>
         ) : (
           <>
-            {/* Welcome screen for logged-in users */}
-            <h1>Welcome, {session.user.name}!</h1>
-            <p>You're logged in with Spotify.</p>
-            <p>Let's continue your music journey with TrackJam.</p>
+            <h1 className="text-xl font-semibold mt-6">Welcome, {session.user.name}!</h1>
+            <p className="mt-2 text-lg">You're logged in with Spotify.</p>
+            <p className="mt-2 text-lg">Let's continue your music journey with TrackJam.</p>
 
-            {/* Sign Out Button */}
-            <button style={styles.signoutButton} onClick={() => signOut()}>
+            <button 
+              className="bg-red-500 text-white py-2 px-6 rounded-lg text-lg mt-6"
+              onClick={() => signOut()}
+            >
               Sign out
             </button>
           </>
@@ -75,58 +91,3 @@ export default function HomePage() {
     </main>
   );
 }
-
-// Styles
-const styles = {
-  container: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '20px',
-    textAlign: 'center',
-  },
-  headerImage: {
-    marginBottom: '20px',
-  },
-  logoImage: {
-    marginBottom: '20px',
-  },
-  textSection: {
-    marginBottom: '40px',
-    color: '#333',
-  },
-  buttonContainer: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '10px',
-  },
-  signupButton: {
-    backgroundColor: '#1DB954', // Spotify green
-    color: 'white',
-    padding: '10px 20px',
-    border: 'none',
-    borderRadius: '5px',
-    cursor: 'pointer',
-    fontSize: '16px',
-  },
-  loginButton: {
-    backgroundColor: '#ddd', // Greyed-out color
-    color: '#666',
-    padding: '10px 20px',
-    border: 'none',
-    borderRadius: '5px',
-    cursor: 'not-allowed',
-    fontSize: '16px',
-  },
-  signoutButton: {
-    backgroundColor: '#ff4b4b', // A red color for the sign-out button
-    color: 'white',
-    padding: '10px 20px',
-    border: 'none',
-    borderRadius: '5px',
-    cursor: 'pointer',
-    fontSize: '16px',
-    marginTop: '20px',
-  },
-};
