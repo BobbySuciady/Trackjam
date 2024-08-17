@@ -12,6 +12,7 @@ export default function Dashboard() {
   const [showPopup, setShowPopup] = useState(false);
   const [selectedFriend, setSelectedFriend] = useState(null);
   const [songTitle, setSongTitle] = useState('');
+  const [friendsListeningData, setFriendsListeningData] = useState([]); // New state for friends' listening data
 
   useEffect(() => {
     if (status === "authenticated" && session) {
@@ -32,6 +33,14 @@ export default function Dashboard() {
             },
           });
           setFriendsData(friendsResponse.data);
+
+          // Fetch what friends are currently listening to
+          const friendsListeningResponse = await axios.get('/api/friends/currently-playing', {
+            headers: {
+              Authorization: `Bearer ${session.accessToken}`,
+            },
+          });
+          setFriendsListeningData(friendsListeningResponse.data);
 
         } catch (error) {
           console.error('Error fetching data:', error);
@@ -134,8 +143,21 @@ export default function Dashboard() {
         ) : (
           friendsData.map((friend) => (
             <li key={friend.id}>
-              {friend.name}: {friend.listeningMinutes?.toFixed(2) || 0} minutes and {friend.points?.toFixed(2) || 0} points
+              <p><strong>{friend.name}</strong></p>
+              <p>{friend.listeningMinutes?.toFixed(2) || 0} minutes and {friend.points?.toFixed(2) || 0} points</p>
               <button onClick={() => sendSongQuest(friend)}>Send Song Quest</button>
+              
+              {/* Display currently playing track if available */}
+              {friendsListeningData.find((f) => f.id === friend.id)?.currentlyPlaying ? (
+                <div>
+                  <p>Track: {friendsListeningData.find((f) => f.id === friend.id).currentlyPlaying.trackName}</p>
+                  <p>Artist: {friendsListeningData.find((f) => f.id === friend.id).currentlyPlaying.artistName}</p>
+                  <p>Album: {friendsListeningData.find((f) => f.id === friend.id).currentlyPlaying.albumName}</p>
+                  <img src={friendsListeningData.find((f) => f.id === friend.id).currentlyPlaying.albumImage} alt="Album cover" width={100} />
+                </div>
+              ) : (
+                <p>Not listening to anything currently</p>
+              )}
             </li>
           ))
         )}

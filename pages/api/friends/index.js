@@ -3,9 +3,9 @@ import User from '../../../models/User';
 
 export default async function handler(req, res) {
   const body = {...req.body} ;
-req.body = null ;
-const session = await getSession({ req:req });
-req.body = body ;
+  req.body = null ;
+  const session = await getSession({ req:req });
+  req.body = body ;
   
   console.log("this is the session");
   console.log(req);
