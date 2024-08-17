@@ -5,6 +5,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import Link from 'next/link';
 
 export default function Dashboard() {
   const { data: session, status } = useSession();
@@ -12,6 +13,7 @@ export default function Dashboard() {
   const [friendsData, setFriendsData] = useState([]);
   const [friendEmail, setFriendEmail] = useState('');
   const [outOfViewUsers, setOutOfViewUsers] = useState([]);
+  const [selectedPerson, setSelectedPerson] = useState(null); // State to track selected person
   const router = useRouter();
   const observer = useRef();
 
@@ -45,7 +47,7 @@ export default function Dashboard() {
     try {
       await axios.post('/api/friends', { friendEmail }, {
         headers: {
-            Authorization: `Bearer ${session.accessToken}`,
+          Authorization: `Bearer ${session.accessToken}`,
         },
       });
   
@@ -102,6 +104,12 @@ export default function Dashboard() {
     setOutOfViewUsers(newOutOfViewUsers); // Update the state with the new list
   };
 
+  const handleClickOutside = (event) => {
+    if (event.target.closest('.selected-person') === null) {
+      setSelectedPerson(null);
+    }
+  };
+
   const renderNumberList = () => {
     const numbers = [];
     for (let i = 40; i >= 0; i--) {
@@ -125,9 +133,9 @@ export default function Dashboard() {
           {/* Render the user's image if their position matches the current staff position */}
           {user && getStaffPosition(user.listeningMinutes) === staffPosition && (
             <Image
-              src="/Person1.png"
+              src={selectedPerson === 'user' ? "/Person1Selected.png" : "/Person1.png"}
               alt="User"
-              className="absolute"
+              className="absolute cursor-pointer selected-person"
               style={{ left: `${getRandomXPosition()}%`, top: 37 }}
               width={100}
               height={100}
@@ -137,6 +145,7 @@ export default function Dashboard() {
                   observer.current.observe(el);
                 }
               }}
+              onClick={() => setSelectedPerson('user')}
             />
           )}
 
@@ -145,9 +154,9 @@ export default function Dashboard() {
             getStaffPosition(friend.listeningMinutes) === staffPosition && (
               <Image
                 key={friend.id}
-                src={`/Person${friendIndex + 2}.png`} // Assuming you have Person2.png, Person3.png, etc.
+                src={selectedPerson === `friend${friendIndex}` ? `/Person${friendIndex + 2}Selected.png` : `/Person${friendIndex + 2}.png`}
                 alt={friend.name}
-                className="absolute"
+                className="absolute cursor-pointer selected-person"
                 style={{ left: `${getRandomXPosition()}%`, top: 34 }}
                 width={100}
                 height={100}
@@ -157,6 +166,7 @@ export default function Dashboard() {
                     observer.current.observe(el);
                   }
                 }}
+                onClick={() => setSelectedPerson(`friend${friendIndex}`)}
               />
             )
           ))}
@@ -181,6 +191,13 @@ export default function Dashboard() {
     return () => observer.current.disconnect();
   }, []);
 
+  useEffect(() => {
+    document.addEventListener('click', handleClickOutside);
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, []);
+
   if (status === "loading") {
     return <p>Loading...</p>;
   }
@@ -191,7 +208,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="bg-gray-300 min-h-screen p-4 flex justify-center items-center relative">
+    <div className="bg-gray-300 min-h-screen flex justify-center items-center relative">
       <div className="bg-white max-w-sm w-full min-h-screen rounded-lg shadow-md flex flex-col items-center">
         
         {/* Sticky Header Package */}
@@ -256,6 +273,75 @@ export default function Dashboard() {
           {renderNumberList()}
         </div>
 
+        <div className="flex flex-col justify-center items-center w-full bg-purple-700">
+        {/* Display the selected person's details */}
+        {selectedPerson && (
+          <div className="fixed bottom-10 left-1/2 transform -translate-x-1/2 w-100 text-white bg-pink-600 p-4 rounded shadow-md z-50">
+            {selectedPerson === 'user' ? (
+              <div>
+                <h3 className="font-bold">Realify's Points</h3>
+                <p>{user?.listeningMinutes} points</p>
+              </div>
+            ) : (
+              friendsData.map((friend, index) => (
+                selectedPerson === `friend${index}` && (
+                  <div key={friend.id}>
+                    <h3 className="font-bold">{friend.name}'s Points</h3>
+                    <p>{friend.listeningMinutes} points</p>
+                  </div>
+                )
+              ))
+            )}
+          </div>
+        )}
+          <div className="w-full h-100 bg-pink-600">
+            {/* WILLIAM CONTINUE HERE FOR DASHBOARD PAGE*/}
+
+          </div>
+          <div className="grid grid-cols-4 gap-8 px-4 py-4 w-full justify-center items-center">
+            <Image
+              src="/Home.png"
+              alt="Home"
+              width={50}
+              height={50}
+            />
+
+            <Link href="/search">
+              <Image
+                src="/Search.png"
+                alt="Search"
+                width={50}
+                height={50}
+              />
+            </Link>
+
+            <Link href="/leaderboard">
+              <Image
+                src="/Barchart.png"
+                alt="Barchart"
+                width={50}
+                height={50}
+              />
+            </Link>
+
+            <Link href="/profile">
+              <Image
+                src="/Profile.png"
+                alt="Profile"
+                width={50}
+                height={50}
+              />
+            </Link>
+          </div>
+
+          <Image
+            src="/FooterBar.png"
+            alt="Footer Bar"
+            width={250}
+            height={250}
+          />
+        </div>
+
       </div>
 
       {/* Out of view arrows */}
@@ -265,7 +351,7 @@ export default function Dashboard() {
           className="bg-blue-500 text-white p-2 rounded fixed z-50 transform -translate-x-1/2"
           style={{
             left: `${user.xPosition}%`,
-            top: user.isAbove ? '10px' : 'auto',
+            top: user.isAbove ? '100px' : 'auto',
             bottom: user.isAbove ? 'auto' : '10px',
           }}
           onClick={() => scrollToUser(user.name)}
@@ -273,6 +359,7 @@ export default function Dashboard() {
           {user.name} {user.isAbove ? '↑' : '↓'}
         </button>
       ))}
+
 
     </div>
   );
