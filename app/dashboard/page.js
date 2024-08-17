@@ -1,7 +1,7 @@
 "use client";
 
 import { signIn, signOut, useSession } from 'next-auth/react';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
@@ -11,7 +11,9 @@ export default function Dashboard() {
   const [user, setUser] = useState(null);
   const [friendsData, setFriendsData] = useState([]);
   const [friendEmail, setFriendEmail] = useState('');
+  const [outOfViewUsers, setOutOfViewUsers] = useState([]);
   const router = useRouter();
+  const observer = useRef();
 
   const fetchUserData = useCallback(async () => {
     if (session && status === "authenticated") {
@@ -62,16 +64,47 @@ export default function Dashboard() {
   };
 
   const getStaffPosition = (minutesListenedToday) => {
-    return Math.floor(minutesListenedToday / 20);
+    return Math.floor(minutesListenedToday / 10);
   };
 
   const getRandomXPosition = () => {
-    return Math.floor(Math.random() * 80) + 10; // Random X position between 10% and 90% of the container width
+    return Math.floor(Math.random() * 60) + 20; // Random X position between 20% and 80% of the container width
+  };
+
+  const handleObserver = (entries) => {
+    const newOutOfViewUsers = [...outOfViewUsers]; // Copy the current state
+    entries.forEach(entry => {
+      const name = entry.target.dataset.name;
+      const isInView = entry.isIntersecting;
+
+      // Check if the person is in view or not
+      if (!isInView) {
+        const boundingRect = entry.boundingClientRect;
+        const isAboveViewport = boundingRect.top < 0;
+        const isBelowViewport = boundingRect.bottom > window.innerHeight;
+
+        if (!newOutOfViewUsers.some(user => user.name === name)) {
+          newOutOfViewUsers.push({
+            name,
+            isAbove: isAboveViewport,
+            xPosition: getRandomXPosition(),
+          });
+        }
+      } else {
+        // If the person comes back into view, remove them from the outOfViewUsers list
+        const index = newOutOfViewUsers.findIndex(user => user.name === name);
+        if (index !== -1) {
+          newOutOfViewUsers.splice(index, 1);
+        }
+      }
+    });
+
+    setOutOfViewUsers(newOutOfViewUsers); // Update the state with the new list
   };
 
   const renderNumberList = () => {
     const numbers = [];
-    for (let i = 72; i >= 0; i--) {
+    for (let i = 40; i >= 0; i--) {
       numbers.push(i.toString().padStart(2, '0')); // Pads single digits with a leading 0
     }
     return numbers.map((number, index) => {
@@ -88,16 +121,22 @@ export default function Dashboard() {
           <div className="absolute inset-0 top-1/2 border-t border-black"></div>
           <div className="absolute inset-0 top-2/3 border-t border-black"></div>
           <div className="absolute inset-0 top-5/6 border-t border-black"></div>
-          
+        
           {/* Render the user's image if their position matches the current staff position */}
           {user && getStaffPosition(user.listeningMinutes) === staffPosition && (
             <Image
               src="/Person1.png"
               alt="User"
               className="absolute"
-              style={{ left: `${getRandomXPosition()}%` }}
-              width={50}
-              height={50}
+              style={{ left: `${getRandomXPosition()}%`, top: 37 }}
+              width={100}
+              height={100}
+              data-name={user.name}
+              ref={el => {
+                if (el) {
+                  observer.current.observe(el);
+                }
+              }}
             />
           )}
 
@@ -109,9 +148,15 @@ export default function Dashboard() {
                 src={`/Person${friendIndex + 2}.png`} // Assuming you have Person2.png, Person3.png, etc.
                 alt={friend.name}
                 className="absolute"
-                style={{ left: `${getRandomXPosition()}%` }}
-                width={50}
-                height={50}
+                style={{ left: `${getRandomXPosition()}%`, top: 34 }}
+                width={100}
+                height={100}
+                data-name={friend.name}
+                ref={el => {
+                  if (el) {
+                    observer.current.observe(el);
+                  }
+                }}
               />
             )
           ))}
@@ -119,6 +164,22 @@ export default function Dashboard() {
       );
     });
   };
+
+  const scrollToUser = (userName) => {
+    const userElement = document.querySelector(`[data-name="${userName}"]`);
+    if (userElement) {
+      userElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  };
+
+  useEffect(() => {
+    observer.current = new IntersectionObserver(handleObserver, {
+      root: null,
+      rootMargin: '0px',
+      threshold: 0.1, // Adjust the threshold as needed
+    });
+    return () => observer.current.disconnect();
+  }, []);
 
   if (status === "loading") {
     return <p>Loading...</p>;
@@ -130,7 +191,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="bg-gray-300 min-h-screen p-4 flex justify-center items-center">
+    <div className="bg-gray-300 min-h-screen p-4 flex justify-center items-center relative">
       <div className="bg-white max-w-sm w-full min-h-screen rounded-lg shadow-md flex flex-col items-center">
         
         {/* Sticky Header Package */}
@@ -196,6 +257,23 @@ export default function Dashboard() {
         </div>
 
       </div>
+
+      {/* Out of view arrows */}
+      {outOfViewUsers.map((user) => (
+        <button
+          key={user.name}
+          className="bg-blue-500 text-white p-2 rounded fixed z-50 transform -translate-x-1/2"
+          style={{
+            left: `${user.xPosition}%`,
+            top: user.isAbove ? '10px' : 'auto',
+            bottom: user.isAbove ? 'auto' : '10px',
+          }}
+          onClick={() => scrollToUser(user.name)}
+        >
+          {user.name} {user.isAbove ? '↑' : '↓'}
+        </button>
+      ))}
+
     </div>
   );
 }
