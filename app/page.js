@@ -20,7 +20,6 @@ export default function HomePage() {
         {/* Onboarding and Login Section */}
         {!session ? (
           <>
-            <h1>Welcome to Spotify Tracker</h1>
             <div style={styles.headerImage}>
               <Image
                 src="/headerPicture.png"
