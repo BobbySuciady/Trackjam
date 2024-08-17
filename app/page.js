@@ -2,9 +2,11 @@
 "use client";
 
 import { signIn, signOut, useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation'; 
 
 export default function Home() {
   const { data: session } = useSession();
+  const router = useRouter();
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-24">
@@ -14,11 +16,7 @@ export default function Home() {
           <button onClick={() => signIn('spotify')}>Login with Spotify</button>
         </>
       ) : (
-        <>
-          <h1>Welcome, {session.user.name}</h1>
-          <button onClick={() => signOut()}>Sign out</button>
-        </>
-      )}
+        router.push('/dashboard'))}
     </main>
   );
 }

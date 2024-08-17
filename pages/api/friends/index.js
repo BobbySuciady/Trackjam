@@ -7,8 +7,8 @@ req.body = null ;
 const session = await getSession({ req:req });
 req.body = body ;
   
-  console.log("this is the session");
-  console.log(req);
+  //console.log("this is the session");
+  //console.log(req);
 
   if (!session) {
     console.log('No session found'); // Log for debugging
@@ -23,7 +23,7 @@ req.body = body ;
       include: { model: User, as: 'Friends' }
     });
 
-    console.log('Current User:', currentUser);
+    //console.log('Current User:', currentUser);
 
     if (!currentUser) {
       return res.status(404).json({ message: 'User not found' });
@@ -31,7 +31,7 @@ req.body = body ;
 
     if (req.method === 'GET') {
       // Check if friends are being loaded correctly
-      console.log('Friends:', currentUser.Friends);
+      //console.log('Friends:', currentUser.Friends);
 
       // Get friends data
       const friendsData = currentUser.Friends.map(friend => ({
