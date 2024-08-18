@@ -94,7 +94,7 @@ export default function Dashboard() {
 
   const handleFormSubmit = async (event) => {
     event.preventDefault();
-    setLoading(true);
+    setIsLoading(true);
     if (status === "authenticated" && session && selectedFriend) {
       setIsLoading(true); // Show loading indicator
 
