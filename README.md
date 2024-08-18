@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://github.com/BobbySuciady/Trackjam/public/trackJamLogoSmall.png" alt="Small TrackJam logo">
+  <img src="https://github.com/BobbySuciady/Trackjam/blob/master/public/trackJamLogoSmall.png" alt="Small TrackJam logo">
 </p>
 
 # TrackJam: Listen, Track, and Compete! 🎵
@@ -20,7 +20,8 @@ Flex your superior music taste on-demand and prove that you are the GOAT!
 
 <p align="center">
   <a href="https://www.figma.com/design/rUhvm55llHjEU9CCjjqp15/Catalyst-2024?node-id=0-1&t=1mcW85Fbs4yYhKk7-1" target="_blank"> Figma Design</a>
-  <img src="https://github.com/BobbySuciady/Trackjam/public/TrackJamArchitecture Diagram.png" alt="TrackJam Architectural Diagram">
+  <br>
+  <img src="https://github.com/BobbySuciady/Trackjam/blob/master/public/TrackJamArchitectureDiagram.png" alt="TrackJam Architectural Diagram">
 </p>
 
 ## Disclaimer ⚠️
