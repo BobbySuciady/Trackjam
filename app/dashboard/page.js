@@ -17,6 +17,7 @@ export default function Dashboard() {
   const [songTitle, setSongTitle] = useState('');
   const [outOfViewUsers, setOutOfViewUsers] = useState([]);
   const [selectedPerson, setSelectedPerson] = useState(null); 
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
   const observer = useRef();
 
@@ -59,6 +60,7 @@ export default function Dashboard() {
   useEffect(() => {
     fetchUserData();
   }, [fetchUserData]);
+  
 
   // Add a friend
   const addFriend = async () => {
@@ -86,11 +88,13 @@ export default function Dashboard() {
   // Send song quest to a friend
   const sendSongQuest = (friend) => {
     setSelectedFriend(friend);
+    
     setShowPopup(true);
   };
 
   const handleFormSubmit = async (event) => {
     event.preventDefault();
+    setLoading(true);
     if (status === "authenticated" && session && selectedFriend) {
       try {
         console.log("Sending song quest to:", selectedFriend.name);
@@ -105,6 +109,7 @@ export default function Dashboard() {
         fetchUserData();
 
         // Close the popup after sending the quest
+        setLoading(false);
         setShowPopup(false);
         setSongTitle('');
         setSelectedFriend(null);
@@ -179,7 +184,7 @@ export default function Dashboard() {
           <div className="absolute inset-0 top-2/3 border-t border-black"></div>
           <div className="absolute inset-0 top-5/6 border-t border-black"></div>
         
-          {user && getStaffPosition(user.listeningMinutes) === staffPosition && (
+          {user && getStaffPosition(user.listeningMinutes+user.points) === staffPosition && (
             <Image
               src={selectedPerson === 'user' ? "/Person1Selected.png" : "/Person1.png"}
               alt="User"
@@ -198,7 +203,7 @@ export default function Dashboard() {
           )}
 
           {friendsData.map((friend, friendIndex) => (
-            getStaffPosition(friend.listeningMinutes) === staffPosition && (
+            getStaffPosition(friend.listeningMinutes+friend.points) === staffPosition && (
               <Image
                 key={friend.id}
                 src={selectedPerson === `friend${friendIndex}` ? `/Person${friendIndex + 2}Selected.png` : `/Person${friendIndex + 2}.png`}
@@ -254,8 +259,11 @@ export default function Dashboard() {
     return <p>You need to be logged in to view this page.</p>;
   }
 
+  
+
   return (
     <div className="bg-gray-300 min-h-screen flex justify-center items-center relative font-londrina">
+        
       <div className="bg-white max-w-sm w-full min-h-screen rounded-lg shadow-md flex flex-col items-center">
         
         <div className="w-full bg-white rounded-b-lg border-black border-b-2 shadow-custom flex items-center flex-col sticky top-0 z-50">
@@ -354,19 +362,23 @@ export default function Dashboard() {
               {/* Top 1/3 section with purple background and name */}
               <div className="flex flex-col justify-center h-1/3 rounded-t p-9" style={{ backgroundColor: '#6C2DEB' }}>
                 <div className="flex items-center justify-between w-full">
-                  <div className="flex items-center">
+                    <div className="flex items-center">
                     <Image
-                      src={`/blankpfp.png`}  // Replace with the correct path to the user's profile picture
-                      alt={`${session.user.name} Profile`}
-                      width={50}
-                      height={50}
-                      className="rounded-full mr-2"
+                        src={`/blankpfp.png`}  // Replace with the correct path to the user's profile picture
+                        alt={`${session.user.name} Profile`}
+                        width={50}
+                        height={50}
+                        className="rounded-full mr-2"
                     />
-                    <h3 className="font-bold text-xl">{session.user.name}</h3>
-                  </div>
-                  <h3 className="font-bold text-xl">{user?.listeningMinutes.toFixed(2)} pts</h3>
+                    <div className="flex flex-col">
+                        <h3 className="font-bold text-xl">{session.user.name}</h3>
+                        <p className='text-xs'>{user?.listeningMinutes.toFixed(2)} minutes listened</p>
+                    </div>
+                    </div>
+                    <h3 className="font-bold text-xl">{(user?.listeningMinutes + user?.points).toFixed(2)} pts</h3>
                 </div>
-              </div>
+            </div>
+
       
               {/* Bottom 2/3 section with last played track in a static small box and top 4 favorite tracks */}
               <div className="flex-grow flex flex-col justify-around p-4" style={{ backgroundColor: '#DED0FF' }}>
@@ -410,29 +422,34 @@ export default function Dashboard() {
       <div key={friend.id} className="h-full flex flex-col">
         {/* Top 1/3 section with purple background and name */}
         <div className="flex flex-col justify-center h-1/3 rounded-t p-9" style={{ backgroundColor: '#6C2DEB' }}>
-          <div className="flex items-center justify-between w-full">
-            <div className="flex items-center">
-              <Image
-                src={`/blankpfp.png`}  // Replace with the correct path to the friend's profile picture
-                alt={`${friend.name} Profile`}
-                width={50}
-                height={50}
-                className="rounded-full mr-2"
-              />
-              <h3 className="font-bold text-xl">{friend.name}</h3>
+            <div className="flex items-center justify-between w-full">
+                <div className="flex items-center">
+                <Image
+                    src={`/blankpfp.png`}  // Replace with the correct path to the friend's profile picture
+                    alt={`${friend.name} Profile`}
+                    width={50}
+                    height={50}
+                    className="rounded-full mr-2"
+                />
+                <div className="flex flex-col">
+                    <h3 className="font-bold text-xl">{friend.name}</h3>
+                    <p className='text-xs'>{friend.listeningMinutes.toFixed(2)} minutes listened</p>
+                </div>
+                </div>
+                <h3 className="font-bold text-xl">{(friend.listeningMinutes + friend.points).toFixed(2)} pts</h3>
             </div>
-            <h3 className="font-bold text-xl">{friend.listeningMinutes.toFixed(2)} pts</h3>
-          </div>
-          <div className="flex justify-center mt-2">
-            <button 
-              onClick={() => sendSongQuest(friend)} 
-              className="bg-blue-500 text-white p-2 rounded w-1/2 text-center" 
-              style={{ backgroundColor: '#519804' }}
-            >
-              Send Song Quest
-            </button>
-          </div>
+            <div className="flex justify-center mt-2">
+                <button 
+                onClick={() => sendSongQuest(friend)} 
+                className="bg-blue-500 text-white p-2 rounded w-1/2 text-center" 
+                style={{ backgroundColor: '#519804' }}
+                >
+                Send Song Quest
+                </button>
+            </div>
         </div>
+
+
 
         {/* Bottom 2/3 section with last played track in a static small box and top 4 favorite tracks */}
         <div className="flex-grow flex flex-col justify-around p-4" style={{ backgroundColor: '#DED0FF' }}>
@@ -559,7 +576,7 @@ export default function Dashboard() {
           />
           <h3 className="font-bold text-xl">{selectedFriend?.name}</h3>
         </div>
-        <h3 className="font-bold text-xl">{selectedFriend?.points.toFixed(2)} pts</h3>
+        <h3 className="font-bold text-xl">{(selectedFriend?.points + selectedFriend.listeningMinutes).toFixed(2)} pts</h3>
       </div>
       <button 
         onClick={() => setShowPopup(false)} 
@@ -582,6 +599,9 @@ export default function Dashboard() {
             placeholder='Search for song'
           />
         </label>
+        {loading && (
+        <p className="mt-2 text-center">Sending song quest...</p>
+      )}
         <div className="flex justify-center">
           <button type="submit" className="bg-green-500 text-white py-3 px-6 rounded-full w-full" style={{ backgroundColor: '#519804' }}>
             Send Song Quest
