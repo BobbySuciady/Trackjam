@@ -400,7 +400,7 @@ export default function Dashboard() {
             
             {friend.lastPlayedTrack ? (
               <div className="flex items-center text-sm">
-                <img
+                <Image
                   src={friend.lastPlayedTrack.albumImage}
                   alt={`${friend.lastPlayedTrack.trackName} album cover`}
                   width={50}
