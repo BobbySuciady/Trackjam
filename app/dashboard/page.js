@@ -16,7 +16,8 @@ export default function Dashboard() {
   const [selectedFriend, setSelectedFriend] = useState(null);
   const [songTitle, setSongTitle] = useState('');
   const [outOfViewUsers, setOutOfViewUsers] = useState([]);
-  const [selectedPerson, setSelectedPerson] = useState(null); 
+  const [selectedPerson, setSelectedPerson] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const observer = useRef();
 
@@ -92,6 +93,8 @@ export default function Dashboard() {
   const handleFormSubmit = async (event) => {
     event.preventDefault();
     if (status === "authenticated" && session && selectedFriend) {
+      setIsLoading(true); // Show loading indicator
+
       try {
         console.log("Sending song quest to:", selectedFriend.name);
 
@@ -111,6 +114,8 @@ export default function Dashboard() {
 
       } catch (error) {
         console.error('Error sending song quest:', error);
+      } finally {
+        setIsLoading(false); // Hide loading indicator
       }
     }
   };
@@ -121,7 +126,7 @@ export default function Dashboard() {
   };
 
   const getRandomXPosition = () => {
-    return Math.floor(Math.random() * 60) + 20;
+    return Math.floor(Math.random() * 30) + 35;
   };
 
   // Handle out of view observer
@@ -258,7 +263,7 @@ export default function Dashboard() {
     <div className="bg-gray-300 min-h-screen flex justify-center items-center relative font-londrina">
       <div className="bg-white max-w-sm w-full min-h-screen rounded-lg shadow-md flex flex-col items-center">
         
-        <div className="w-full bg-white rounded-b-lg border-black border-b-2 shadow-custom flex items-center flex-col sticky top-0 z-50">
+        <div className="w-full bg-white rounded-b-lg border-black border-b-2 shadow-2xl flex items-center flex-col sticky top-0 z-50">
           <Image
             src={"/Header.png"}
             alt={"iPhone header"}
@@ -277,82 +282,19 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <h1 className="text-xl font-semibold">Welcome, {session.user.name}</h1>
-        <h2 className="text-lg font-semibold mt-4">Your Listening Minutes</h2>
-        <p className="mt-2 text-lg">You have listened to {user?.listeningMinutes.toFixed(2) || 0} minutes of music today.</p>
-        <p className="mt-2 text-lg">Your points {user?.points.toFixed(0) || 0}</p>
-        <p>{user?.lastPlayedTrackName}</p>
-
-        <h2 className="text-lg font-semibold mt-4">Your Friends' Last Played Tracks</h2>
-        <ul className="mt-2">
-          {friendsData.length === 0 ? (
-            <p>No friends data available.</p>
-          ) : (
-            friendsData.map((friend) => (
-              <li key={friend.id} className="mt-1">
-                {friend.name}: {friend.listeningMinutes?.toFixed(2) || 0} minutes & {friend.points?.toFixed(0) || 0} points
-
-                {friend.lastPlayedTrack ? (
-                  <div>
-                    <p>Last Played Track: {friend.lastPlayedTrack.trackName}</p>
-                    <p>Artist: {friend.lastPlayedTrack.artistName}</p>
-                    <p>Album: {friend.lastPlayedTrack.albumName}</p>
-                    <img src={friend.lastPlayedTrack.albumImage} alt={`${friend.lastPlayedTrack.trackName} album cover`} width={100} />
-                  </div>
-                ) : (
-                  <p>No recently played track available.</p>
-                )}
-
-                <h3 className="text-lg font-semibold mt-4">Top 4 Tracks</h3>
-                <div className="grid grid-cols-2 gap-4 mt-2">
-                  {friend.topTracks?.map((track, index) => (
-                    <div key={index} className="flex flex-col items-center">
-                      <img src={track.albumImage} alt={`Album cover for ${track.trackName}`} width={80} height={80} />
-                      <p className="text-sm text-center mt-2">{track.trackName}</p>
-                    </div>
-                  ))}
-                </div>
-
-                <button onClick={() => sendSongQuest(friend)} className="mt-2 text-white p-2 rounded" style={{ backgroundColor: '#519804' }}>
-                  Send Song Quest
-                </button>
-              </li>
-            ))
-          )}
-        </ul>
-
-        <h3 className="text-lg font-semibold mt-4">Add a Friend</h3>
-        <input
-          type="email"
-          value={friendEmail}
-          onChange={(e) => setFriendEmail(e.target.value)}
-          placeholder="Friend's Email"
-          className="mt-2 w-full p-2 border border-gray-300 rounded"
-        />
-        <button onClick={addFriend} className="mt-2 bg-blue-500 text-white p-2 rounded w-full">
-          Add Friend
-        </button>
-
-        {/* Sign Out Button */}
-        <div className="mt-4">
-          <button onClick={() => signOut()} className="bg-red-500 text-white p-2 rounded w-full">
-            Sign Out
-          </button>
-        </div>
-
         {/* Scrollable Number List */}
-        <div className="number-list-container overflow-y-scroll h-full w-full border-2 border-black mt-4">
+        <div className="number-list-container overflow-y-scroll h-full w-full border-2 border-black mt-4 mb-24">
           {renderNumberList()}
         </div>
 
-        <div className="flex flex-col justify-center items-center w-full" style={{ backgroundColor: '#6C2DEB' }}>
+        <div className="flex flex-col justify-center items-center w-96" style={{ backgroundColor: '#6C2DEB' }}>
         {/* Display the selected person's details */}
         {selectedPerson && (
-          <div className="fixed bottom-20 w-full left-1/2 transform -translate-x-1/2 text-white rounded shadow-md z-50 h-1/2" style={{ backgroundColor: 'DED0FF' }}>
+          <div className="fixed bottom-24 left-1/2 transform -translate-x-1/2 text-white rounded shadow-md z-50 h-1/2 w-96" style={{ backgroundColor: 'DED0FF' }}>
           {selectedPerson === 'user' ? (
             <div className="h-full flex flex-col">
               {/* Top 1/3 section with purple background and name */}
-              <div className="flex flex-col justify-center h-1/3 rounded-t p-9" style={{ backgroundColor: '#6C2DEB' }}>
+              <div className="flex flex-col justify-center h-1/3 rounded-t p-9 w-96" style={{ backgroundColor: '#6C2DEB' }}>
                 <div className="flex items-center justify-between w-full">
                   <div className="flex items-center">
                     <Image
@@ -369,7 +311,7 @@ export default function Dashboard() {
               </div>
       
               {/* Bottom 2/3 section with last played track in a static small box and top 4 favorite tracks */}
-              <div className="flex-grow flex flex-col justify-around p-4" style={{ backgroundColor: '#DED0FF' }}>
+              <div className="flex-grow flex flex-col justify-around p-4 w-96" style={{ backgroundColor: '#DED0FF' }}>
                 <h3 className="text-md font-bold mb-1 text-purple-500">Last Played Track</h3>
                 <div className="flex flex-col items-center mb-4 bg-white p-4 rounded shadow-md w-full h-25">
                   {user?.lastPlayedTrackName && user?.lastPlayedTrackAlbumImage && user?.lastPlayedTrackArtist ? (
@@ -407,7 +349,7 @@ export default function Dashboard() {
 ) : (
   friendsData.map((friend, index) => (
     selectedPerson === `friend${index}` && (
-      <div key={friend.id} className="h-full flex flex-col">
+      <div key={friend.id} className="h-full flex flex-col w-96">
         {/* Top 1/3 section with purple background and name */}
         <div className="flex flex-col justify-center h-1/3 rounded-t p-9" style={{ backgroundColor: '#6C2DEB' }}>
           <div className="flex items-center justify-between w-full">
@@ -482,7 +424,7 @@ export default function Dashboard() {
         )}
 
           {/* NAVBAR */}
-          <div className="fixed bottom-0 w-full grid grid-cols-4 gap-8 px-4 py-4 w-full justify-center items-center" style={{ backgroundColor: '#6C2DEB' }}>
+          <div className="fixed bottom-0 w-96 grid grid-cols-4 gap-4 px-4 py-4 justify-center items-center bg-purple-700 pb-8" style={{ backgroundColor: '#6C2DEB' }}>
             <Image
               src="/Home.png"
               alt="Home"
@@ -518,12 +460,14 @@ export default function Dashboard() {
             </Link>
           </div>
 
+        <div className="fixed bottom-0 justify-center mt-4">
           <Image
             src="/FooterBar.png"
             alt="Footer Bar"
             width={250}
             height={250}
           />
+        </div>
         </div>
       </div>
 
@@ -535,7 +479,7 @@ export default function Dashboard() {
           style={{
             left: `${user.xPosition}%`,
             top: user.isAbove ? '100px' : 'auto',
-            bottom: user.isAbove ? 'auto' : '10px',
+            bottom: user.isAbove ? 'auto' : '100px',
           }}
           onClick={() => scrollToUser(user.name)}
         >
@@ -544,7 +488,7 @@ export default function Dashboard() {
       ))}
 
 {showPopup && (
-  <div className="popup fixed top-[100px] left-0 right-0 bottom-20 z-40 flex flex-col justify-between text-white" style={{ backgroundColor: '#6C2DEB' }}>
+  <div className="popup fixed top-[100px] bottom-20 z-40 flex flex-col justify-between text-white w-96" style={{ backgroundColor: '#6C2DEB' }}>
 
     {/* Top half: Name, Points, and Cancel Button */}
     <div className="flex flex-col justify-center h-1/5 p-7">
@@ -571,20 +515,20 @@ export default function Dashboard() {
     </div>
 
     {/* Bottom half: Field to send song quest */}
-    <div className="flex flex-col h-4/5 p-7 justify-between" style={{ backgroundColor: '#DED0FF' }}>
-      <form onSubmit={handleFormSubmit} className="flex flex-col h-full justify-between">
+    <div className="flex flex-col h-4/5 p-7 justify-between w-96" style={{ backgroundColor: '#DED0FF' }}>
+      <form onSubmit={handleFormSubmit} className="flex flex-col h-full justify-between w-96">
         <label className="block mb-4">
           <input 
             type="text" 
             value={songTitle}
             onChange={(e) => setSongTitle(e.target.value)}
-            className="w-full p-3 mt-2 border border-gray-300 rounded-full text-black"
+            className="p-3 mt-2 border border-gray-300 rounded-full text-black w-80"
             placeholder='Search for song'
           />
         </label>
-        <div className="flex justify-center">
-          <button type="submit" className="bg-green-500 text-white py-3 px-6 rounded-full w-full" style={{ backgroundColor: '#519804' }}>
-            Send Song Quest
+        <div className="flex justify-center items-center">
+          <button type="submit" className="bg-green-500 text-white py-3 px-6 rounded-full w-80 mr-16" style={{ backgroundColor: '#519804' }}>
+            {isLoading ? 'Loading... Page will close once sent' : 'Send Song Quest'}
           </button>
         </div>
       </form>

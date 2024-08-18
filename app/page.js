@@ -18,41 +18,47 @@ export default function HomePage() {
       <div className="bg-white max-w-sm w-full min-h-screen rounded-lg shadow-md flex flex-col items-center">
         {!session ? (
           <>
-            {/* iPhone-like Header */}
-            <div className="relative w-full mb-6">
-              <Image
-                src="/Header.png"
-                alt="iPhone header"
-                width={450}
-                height={50}
-                className="w-full rounded-t-lg"
-              />
-              <div className="absolute inset-x-0 top-20 flex justify-center">
+            {/* Background Image Section */}
+            <div 
+              className="relative w-full h-80 bg-cover bg-center rounded-t-lg" 
+              style={{ backgroundImage: 'url(/headerPicture.png)' }}
+            >
+              {/* iPhone-like Header */}
+              <div className="relative w-full h-full">
                 <Image
-                  src="/trackJamLogo.png"
-                  alt="TrackJam Logo"
-                  width={150}
-                  height={150}
-                  className="w-40 h-40" // Larger to avoid cropping
+                  src="/Header.png"
+                  alt="iPhone header"
+                  width={450}
+                  height={50}
+                  className="absolute top-0 w-full rounded-t-lg z-50"
                 />
+                <div className="absolute inset-x-0 top-20 flex justify-center">
+                  <Image
+                    src="/trackJamLogo.png"
+                    alt="TrackJam Logo"
+                    width={225}
+                    height={150}
+                    className="mt-60" // Larger to avoid cropping
+                  />
+                </div>
               </div>
             </div>
 
             {/* Text Section */}
             <div className="text-center mt-40 px-4">
               <h1 className="text-2xl font-bold">Stream, team, and reign supreme with TrackJam!</h1>
-              <p className="mt-4 text-lg">
+              <p className="mt-4 text-lg text-gray-500">
                 Compare your Spotify listening minutes, challenge friends, and climb the leaderboard. Share song recommendations to earn points and expand your musical horizons.
               </p>
             </div>
 
             {/* Buttons Section */}
-            <div className="flex flex-col items-center gap-4 mt-auto mb-24 w-full px-4">
+            <div className="flex flex-col items-center gap-4 mt-4 mb-24 w-full px-4 mt-8">
               <button 
                 className="bg-green-600 text-white py-2 px-6 rounded-lg text-lg w-full"
                 onClick={() => signIn('spotify')}
               >
-                Sign up with Spotify
+                Connect with Spotify
               </button>
               <button 
                 className="bg-gray-400 text-white py-2 px-6 rounded-lg text-lg w-full"
@@ -70,6 +76,15 @@ export default function HomePage() {
                 width={450}
                 height={50}
                 className="w-full"
+              />
+            </div>
+
+            <div className="fixed bottom-0 justify-center mt-4">
+              <Image
+                src="/FooterBar.png"
+                alt="Footer Bar"
+                width={250}
+                height={250}
               />
             </div>
           </>
