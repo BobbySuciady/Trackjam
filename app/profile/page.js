@@ -69,7 +69,7 @@ export default function Profile() {
           {user ? (
             <>
               <p className="font-relaxed text-purple-700 text-lg">
-                You've listened to <span className="bg-green-200">{user.listeningMinutes.toFixed(2) || 0}</span> minutes of music today.
+                You&apos;ve listened to <span className="bg-green-200">{user.listeningMinutes.toFixed(2) || 0}</span> minutes of music today.
               </p>
               <p className="font-relaxed text-purple-700 text-lg">
                 You currently have <span className="bg-green-200">{user.points.toFixed(0) || 0}</span> points.
