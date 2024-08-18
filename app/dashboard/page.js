@@ -111,7 +111,7 @@ export default function Dashboard() {
         fetchUserData();
 
         // Close the popup after sending the quest
-        setLoading(false);
+        setIsLoading(false);
         setShowPopup(false);
         setSongTitle('');
         setSelectedFriend(null);
