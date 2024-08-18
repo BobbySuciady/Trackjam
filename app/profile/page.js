@@ -65,7 +65,13 @@ export default function Profile() {
         </div>
 
         <div className="flex flex-col flex-grow justify-center items-center text-center px-12 pb-20 h-max bg-purple-300">
-          <h1 className="text-xl font-bold mb-4 text-4xl text-purple-800">Welcome, {session.user.name}</h1>
+          {session ? (
+            <h1 className="text-xl font-bold mb-4 text-4xl text-purple-800">
+              Welcome, {session.user.name}
+            </h1>
+          ) : (
+            <p>Loading...</p>
+          )}
           {user ? (
             <>
               <p className="font-relaxed text-purple-700 text-lg">
@@ -95,11 +101,11 @@ export default function Profile() {
                   ))}
                 </div>
                 
-            <div className="mt-4 mb-8">
-                <button onClick={handleSignOut} className="bg-red-500 text-white p-2 rounded w-full">
-                    Sign Out
-                </button>
-            </div>
+                <div className="mt-4 mb-8">
+                  <button onClick={handleSignOut} className="bg-red-500 text-white p-2 rounded w-full">
+                      Sign Out
+                  </button>
+                </div>
 
               </div>
             </>
@@ -147,7 +153,6 @@ export default function Profile() {
             />
           </Link>
         </div>
-
 
         <div className="fixed bottom-0 justify-center mt-4">
           <Image
