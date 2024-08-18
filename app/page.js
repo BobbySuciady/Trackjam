@@ -91,8 +91,8 @@ export default function HomePage() {
         ) : (
           <>
             <h1 className="text-xl font-semibold mt-6">Welcome, {session.user.name}!</h1>
-            <p className="mt-2 text-lg">You're logged in with Spotify.</p>
-            <p className="mt-2 text-lg">Let's continue your music journey with TrackJam.</p>
+            <p className="mt-2 text-lg">You&apos;re logged in with Spotify.</p>
+            <p className="mt-2 text-lg">Let&apos;s continue your music journey with TrackJam.</p>
 
             <button 
               className="bg-red-500 text-white py-2 px-6 rounded-lg text-lg mt-6"

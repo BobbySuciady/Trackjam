@@ -64,7 +64,7 @@ export default function AddFriend() {
 
         <div className="flex flex-col flex-grow justify-center items-center text-center px-20 py-12 h-max bg-purple-300">
             <h1 className="text-xl font-bold mb-4 text-5xl text-purple-800">Add Your Friends!</h1>
-            <p className="font-relaxed text-purple-700">Input your friend's email address to add them as friend.</p>
+            <p className="font-relaxed text-purple-700">Input your friend&apos;s email address to add them as friend.</p>
             <Image 
               src={"/AddFriendPicture.png"}
               alt={"Add Friend"}
