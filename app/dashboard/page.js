@@ -16,7 +16,8 @@ export default function Dashboard() {
   const [selectedFriend, setSelectedFriend] = useState(null);
   const [songTitle, setSongTitle] = useState('');
   const [outOfViewUsers, setOutOfViewUsers] = useState([]);
-  const [selectedPerson, setSelectedPerson] = useState(null); 
+  const [selectedPerson, setSelectedPerson] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const observer = useRef();
 
@@ -29,7 +30,19 @@ export default function Dashboard() {
             Authorization: `Bearer ${session.accessToken}`,
           },
         });
-        setUser(response.data);
+        const {
+            lastPlayedTrackName,
+            lastPlayedTrackAlbumImage,
+            lastPlayedTrackArtist,
+            ...restUserData
+          } = response.data;
+    
+          setUser({
+            ...restUserData,
+            lastPlayedTrackName,
+            lastPlayedTrackAlbumImage,
+            lastPlayedTrackArtist,
+          });
 
         const friendsResponse = await axios.get('/api/friends', {
           headers: {
@@ -47,6 +60,7 @@ export default function Dashboard() {
   useEffect(() => {
     fetchUserData();
   }, [fetchUserData]);
+  
 
   // Add a friend
   const addFriend = async () => {
@@ -74,12 +88,16 @@ export default function Dashboard() {
   // Send song quest to a friend
   const sendSongQuest = (friend) => {
     setSelectedFriend(friend);
+    
     setShowPopup(true);
   };
 
   const handleFormSubmit = async (event) => {
     event.preventDefault();
+    setLoading(true);
     if (status === "authenticated" && session && selectedFriend) {
+      setIsLoading(true); // Show loading indicator
+
       try {
         console.log("Sending song quest to:", selectedFriend.name);
 
@@ -93,12 +111,15 @@ export default function Dashboard() {
         fetchUserData();
 
         // Close the popup after sending the quest
+        setLoading(false);
         setShowPopup(false);
         setSongTitle('');
         setSelectedFriend(null);
 
       } catch (error) {
         console.error('Error sending song quest:', error);
+      } finally {
+        setIsLoading(false); // Hide loading indicator
       }
     }
   };
@@ -109,7 +130,7 @@ export default function Dashboard() {
   };
 
   const getRandomXPosition = () => {
-    return Math.floor(Math.random() * 60) + 20;
+    return Math.floor(Math.random() * 30) + 35;
   };
 
   // Handle out of view observer
@@ -167,7 +188,7 @@ export default function Dashboard() {
           <div className="absolute inset-0 top-2/3 border-t border-black"></div>
           <div className="absolute inset-0 top-5/6 border-t border-black"></div>
         
-          {user && getStaffPosition(user.listeningMinutes) === staffPosition && (
+          {user && getStaffPosition(user.listeningMinutes+user.points) === staffPosition && (
             <Image
               src={selectedPerson === 'user' ? "/Person1Selected.png" : "/Person1.png"}
               alt="User"
@@ -186,7 +207,7 @@ export default function Dashboard() {
           )}
 
           {friendsData.map((friend, friendIndex) => (
-            getStaffPosition(friend.listeningMinutes) === staffPosition && (
+            getStaffPosition(friend.listeningMinutes+friend.points) === staffPosition && (
               <Image
                 key={friend.id}
                 src={selectedPerson === `friend${friendIndex}` ? `/Person${friendIndex + 2}Selected.png` : `/Person${friendIndex + 2}.png`}
@@ -242,11 +263,14 @@ export default function Dashboard() {
     return <p>You need to be logged in to view this page.</p>;
   }
 
+  
+
   return (
-    <div className="bg-gray-300 min-h-screen flex justify-center items-center relative">
+    <div className="bg-gray-300 min-h-screen flex justify-center items-center relative font-londrina">
+        
       <div className="bg-white max-w-sm w-full min-h-screen rounded-lg shadow-md flex flex-col items-center">
         
-        <div className="w-full bg-white rounded-b-lg border-black border-b-2 shadow-custom flex items-center flex-col sticky top-0 z-10">
+        <div className="w-full bg-white rounded-b-lg border-black border-b-2 shadow-2xl flex items-center flex-col sticky top-0 z-50">
           <Image
             src={"/Header.png"}
             alt={"iPhone header"}
@@ -265,128 +289,158 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <h1 className="text-xl font-semibold">Welcome, {session.user.name}</h1>
-        <h2 className="text-lg font-semibold mt-4">Your Listening Minutes</h2>
-        <p className="mt-2 text-lg">You have listened to {user?.listeningMinutes.toFixed(2) || 0} minutes of music today.</p>
-        
-        <h2 className="text-lg font-semibold mt-4">Your Friends' Last Played Tracks</h2>
-        <ul className="mt-2">
-          {friendsData.length === 0 ? (
-            <p>No friends data available.</p>
-          ) : (
-            friendsData.map((friend) => (
-              <li key={friend.id} className="mt-1">
-                {friend.name}: {friend.listeningMinutes?.toFixed(2) || 0} minutes
-
-                {friend.lastPlayedTrack ? (
-                  <div>
-                    <p>Track: {friend.lastPlayedTrack.trackName}</p>
-                    <p>Artist: {friend.lastPlayedTrack.artistName}</p>
-                    <p>Album: {friend.lastPlayedTrack.albumName}</p>
-                    <img src={friend.lastPlayedTrack.albumImage} alt={`${friend.lastPlayedTrack.trackName} album cover`} width={100} />
-                  </div>
-                ) : (
-                  <p>No recently played track available.</p>
-                )}
-
-                <button onClick={() => sendSongQuest(friend)}>Send Song Quest</button>
-              </li>
-            ))
-          )}
-        </ul>
-
-        <h3 className="text-lg font-semibold mt-4">Add a Friend</h3>
-        <input
-          type="email"
-          value={friendEmail}
-          onChange={(e) => setFriendEmail(e.target.value)}
-          placeholder="Friend's Email"
-          className="mt-2 w-full p-2 border border-gray-300 rounded"
-        />
-        <button onClick={addFriend} className="mt-2 bg-blue-500 text-white p-2 rounded w-full">
-          Add Friend
-        </button>
-
-        {/* Sign Out Button */}
-        <div className="mt-4">
-          <button onClick={() => signOut()} className="bg-red-500 text-white p-2 rounded w-full">
-            Sign Out
-          </button>
-        </div>
-
         {/* Scrollable Number List */}
-        <div className="number-list-container overflow-y-scroll h-full w-full border-2 border-black mt-4">
+        <div className="number-list-container overflow-y-scroll h-full w-full border-2 border-black mt-4 mb-24">
           {renderNumberList()}
         </div>
 
-        <div className="flex flex-col justify-center items-center w-full bg-purple-700">
+        <div className="flex flex-col justify-center items-center w-96" style={{ backgroundColor: '#6C2DEB' }}>
         {/* Display the selected person's details */}
         {selectedPerson && (
-          <div className="fixed bottom-20 w-full left-1/2 transform -translate-x-1/2 text-white bg-pink-600 rounded shadow-md z-50 h-1/2">
+          <div className="fixed bottom-24 left-1/2 transform -translate-x-1/2 text-white rounded shadow-md z-50 h-1/2 w-96" style={{ backgroundColor: 'DED0FF' }}>
           {selectedPerson === 'user' ? (
             <div className="h-full flex flex-col">
-            {/* Top 1/3 section with purple background and name */}
-            <div className="bg-purple-600 flex flex-col justify-center h-1/3 rounded-t p-9">
-              <div className="flex items-center justify-between w-full">
+              {/* Top 1/3 section with purple background and name */}
+              <div className="flex flex-col justify-center h-1/3 rounded-t p-9 w-96" style={{ backgroundColor: '#6C2DEB' }}>
+                <div className="flex items-center justify-between w-full">
+                    <div className="flex items-center">
+                    <Image
+                        src={`/blankpfp.png`}  // Replace with the correct path to the user's profile picture
+                        alt={`${session.user.name} Profile`}
+                        width={50}
+                        height={50}
+                        className="rounded-full mr-2"
+                    />
+                    <div className="flex flex-col">
+                        <h3 className="font-bold text-xl">{session.user.name}</h3>
+                        <p className='text-xs'>{user?.listeningMinutes.toFixed(2)} minutes listened</p>
+                    </div>
+                    </div>
+                    <h3 className="font-bold text-xl">{(user?.listeningMinutes + user?.points).toFixed(2)} pts</h3>
+                </div>
+            </div>
+
+      
+              {/* Bottom 2/3 section with last played track in a static small box and top 4 favorite tracks */}
+              <div className="flex-grow flex flex-col justify-around p-4 w-96" style={{ backgroundColor: '#DED0FF' }}>
+                <h3 className="text-md font-bold mb-1 text-purple-500">Last Played Track</h3>
+                <div className="flex flex-col items-center mb-4 bg-white p-4 rounded shadow-md w-full h-25">
+                  {user?.lastPlayedTrackName && user?.lastPlayedTrackAlbumImage && user?.lastPlayedTrackArtist ? (
+                    <div className="flex items-center text-sm">
+                      <img
+                        src={user.lastPlayedTrackAlbumImage}
+                        alt={`${user.lastPlayedTrackName} album cover`}
+                        width={50}
+                        height={50}
+                        className="rounded-full mr-4"
+                      />
+                      <div>
+                        <p className="font-semibold text-sm text-purple-500">{user.lastPlayedTrackName}</p>
+                        <p className="text-xs text-purple-500">{user.lastPlayedTrackArtist}</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-sm">No recently played track available.</p>
+                  )}
+                </div>
+      
+                {/* Top 4 Favorite Tracks */}
+                <div className="flex flex-col items-center">
+                  <h3 className="text-md font-bold mb-2 text-purple-500">Top 4 Tracks</h3>
+                  <div className="flex justify-center space-x-4">
+                    {user?.topTracks?.map((track, index) => (
+                      <div key={index} className="flex flex-col items-center text-purple-500">
+                        <img src={track.albumImage} alt={`Album cover for ${track.trackName}`} width={60} height={60} className="rounded" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+) : (
+  friendsData.map((friend, index) => (
+    selectedPerson === `friend${index}` && (
+      <div key={friend.id} className="h-full flex flex-col w-96">
+        {/* Top 1/3 section with purple background and name */}
+        <div className="flex flex-col justify-center h-1/3 rounded-t p-9" style={{ backgroundColor: '#6C2DEB' }}>
+            <div className="flex items-center justify-between w-full">
                 <div className="flex items-center">
-                  <Image
-                    src={`/blankpfp.png`}  // Replace with the correct path to the user's profile picture
-                    alt={`${session.user.name} Profile`}
+                <Image
+                    src={`/blankpfp.png`}  // Replace with the correct path to the friend's profile picture
+                    alt={`${friend.name} Profile`}
                     width={50}
                     height={50}
                     className="rounded-full mr-2"
-                  />
-                  <h3 className="font-bold text-xl">{session.user.name}</h3>
+                />
+                <div className="flex flex-col">
+                    <h3 className="font-bold text-xl">{friend.name}</h3>
+                    <p className='text-xs'>{friend.listeningMinutes.toFixed(2)} minutes listened</p>
                 </div>
-                <h3 className="font-bold text-xl">{user?.listeningMinutes} pts</h3>
-              </div>
+                </div>
+                <h3 className="font-bold text-xl">{(friend.listeningMinutes + friend.points).toFixed(2)} pts</h3>
             </div>
-            {/* Bottom 2/3 section, empty */}
-            <div className="flex-grow flex items-center justify-center">
-              <p className="font-bold">Your Points: {user?.listeningMinutes}</p>
+            <div className="flex justify-center mt-2">
+                <button 
+                onClick={() => sendSongQuest(friend)} 
+                className="bg-blue-500 text-white p-2 rounded w-1/2 text-center" 
+                style={{ backgroundColor: '#519804' }}
+                >
+                Send Song Quest
+                </button>
+            </div>
+        </div>
+
+
+
+        {/* Bottom 2/3 section with last played track in a static small box and top 4 favorite tracks */}
+        <div className="flex-grow flex flex-col justify-around p-4" style={{ backgroundColor: '#DED0FF' }}>
+          {/* Last Played Track in a Static Small Box */}
+          <h3 className="text-md font-bold mb-1 text-purple-500">Last Played Track</h3>
+          <div className="flex flex-col items-center mb-4 bg-white p-4 rounded shadow-md w-full h-25">
+            
+            {friend.lastPlayedTrack ? (
+              <div className="flex items-center text-sm">
+                <img
+                  src={friend.lastPlayedTrack.albumImage}
+                  alt={`${friend.lastPlayedTrack.trackName} album cover`}
+                  width={50}
+                  height={50}
+                  className="rounded-full mr-4"
+                />
+                <div>
+                  <p className="font-semibold text-sm text-purple-500">{friend.lastPlayedTrack.trackName}</p>
+                  <p className="text-xs text-purple-500">{friend.lastPlayedTrack.artistName}</p>
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm">No recently played track available.</p>
+            )}
+          </div>
+
+          {/* Top 4 Favorite Tracks */}
+          <div className="flex flex-col items-center">
+            <h3 className="text-md font-bold mb-2 text-purple-500">Top 4 Tracks</h3>
+            <div className="flex justify-center space-x-4">
+              {friend.topTracks?.map((track, index) => (
+                <div key={index} className="flex flex-col items-center text-purple-500">
+                  <img src={track.albumImage} alt={`Album cover for ${track.trackName}`} width={60} height={60} className="rounded" />
+                </div>
+              ))}
             </div>
           </div>
-          ) : (
-            friendsData.map((friend, index) => (
-              selectedPerson === `friend${index}` && (
-                <div key={friend.id} className="h-full flex flex-col">
-                  {/* Top 1/3 section with purple background and name */}
-                  <div className="bg-purple-600 flex flex-col justify-center h-1/3 rounded-t p-9">
-                    <div className="flex items-center justify-between w-full">
-                        <div className="flex items-center">
-                        <Image
-                            src={`/blankpfp.png`}  // Replace with the correct path to the friend's profile picture
-                            alt={`${friend.name} Profile`}
-                            width={50}
-                            height={50}
-                            className="rounded-full mr-2"
-                        />
-                        <h3 className="font-bold text-xl">{friend.name}</h3>
-                        </div>
-                        <h3 className="font-bold text-xl">{friend.listeningMinutes} pts</h3>
-                    </div>
-                    <div className="flex justify-center mt-2">
-                        <button 
-                            onClick={() => sendSongQuest(friend)} 
-                            className="bg-blue-500 text-white p-2 rounded w-1/2 text-center"
-                        >
-                            Send Song Quest
-                        </button>
-                    </div>
-                </div>
-                  {/* Bottom 2/3 section, empty */}
-                  <div className="flex-grow flex items-center justify-center">
-                    <p className="font-bold">Points: {friend.listeningMinutes}</p>
-                  </div>
-                </div>
-              )
-            ))
-          )}
+        </div>
+      </div>
+    )
+  ))
+)}
+
+
+
         </div>        
         )}
 
           {/* NAVBAR */}
-          <div className="fixed bottom-0 w-full grid grid-cols-4 gap-8 px-4 py-4 w-full justify-center items-center bg-purple-700">
+          <div className="fixed bottom-0 w-96 grid grid-cols-4 gap-4 px-4 py-4 justify-center items-center bg-purple-700 pb-8" style={{ backgroundColor: '#6C2DEB' }}>
             <Image
               src="/Home.png"
               alt="Home"
@@ -422,12 +476,14 @@ export default function Dashboard() {
             </Link>
           </div>
 
+        <div className="fixed bottom-0 justify-center mt-4">
           <Image
             src="/FooterBar.png"
             alt="Footer Bar"
             width={250}
             height={250}
           />
+        </div>
         </div>
       </div>
 
@@ -439,7 +495,7 @@ export default function Dashboard() {
           style={{
             left: `${user.xPosition}%`,
             top: user.isAbove ? '100px' : 'auto',
-            bottom: user.isAbove ? 'auto' : '10px',
+            bottom: user.isAbove ? 'auto' : '100px',
           }}
           onClick={() => scrollToUser(user.name)}
         >
@@ -447,25 +503,59 @@ export default function Dashboard() {
         </button>
       ))}
 
-      {showPopup && (
-        <div className="popup">
-          <div className="popup-inner">
-            <h2>Send Song Quest to {selectedFriend?.name}</h2>
-            <form onSubmit={handleFormSubmit}>
-              <label>
-                Song Title:
-                <input 
-                  type="text" 
-                  value={songTitle}
-                  onChange={(e) => setSongTitle(e.target.value)}
-                />
-              </label>
-              <button type="submit">Send</button>
-              <button type="button" onClick={() => setShowPopup(false)}>Cancel</button>
-            </form>
-          </div>
+{showPopup && (
+  <div className="popup fixed top-[100px] bottom-20 z-40 flex flex-col justify-between text-white w-96" style={{ backgroundColor: '#6C2DEB' }}>
+
+    {/* Top half: Name, Points, and Cancel Button */}
+    <div className="flex flex-col justify-center h-1/5 p-7">
+      <div className="flex items-center justify-between w-full">
+        <div className="flex items-center">
+          <Image
+            src={`/blankpfp.png`}  // Replace with the correct path to the user's profile picture
+            alt={`${selectedFriend?.name} Profile`}
+            width={50}
+            height={50}
+            className="rounded-full mr-2"
+          />
+          <h3 className="font-bold text-xl">{selectedFriend?.name}</h3>
         </div>
-      )}
+        <h3 className="font-bold text-xl">{(selectedFriend?.points + selectedFriend.listeningMinutes).toFixed(2)} pts</h3>
+      </div>
+      <button 
+        onClick={() => setShowPopup(false)} 
+        className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full w-10 h-10 flex items-center justify-center"
+        aria-label="Close"
+      >
+        &times;
+      </button>
+    </div>
+
+    {/* Bottom half: Field to send song quest */}
+    <div className="flex flex-col h-4/5 p-7 justify-between w-96" style={{ backgroundColor: '#DED0FF' }}>
+      <form onSubmit={handleFormSubmit} className="flex flex-col h-full justify-between w-96">
+        <label className="block mb-4">
+          <input 
+            type="text" 
+            value={songTitle}
+            onChange={(e) => setSongTitle(e.target.value)}
+            className="p-3 mt-2 border border-gray-300 rounded-full text-black w-80"
+            placeholder='Search for song'
+          />
+        </label>
+        <div className="flex justify-center items-center">
+          <button type="submit" className="bg-green-500 text-white py-3 px-6 rounded-full w-80 mr-16" style={{ backgroundColor: '#519804' }}>
+            {isLoading ? 'Loading... Page will close once sent' : 'Send Song Quest'}
+          </button>
+        </div>
+      </form>
+    </div>
+
+  </div>
+)}
+
+
+
+
     </div>
   );
 }

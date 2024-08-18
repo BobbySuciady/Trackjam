@@ -1,8 +1,13 @@
+// pages/api/friends/index.js
+
 import { getSession } from 'next-auth/react';
 import User from '../../../models/User';
 
 export default async function handler(req, res) {
-  const session = await getSession({ req });
+  const body = {...req.body} ;
+  req.body = null ;
+  const session = await getSession({ req:req });
+  req.body = body ;
 
   if (!session) {
     return res.status(401).json({ message: 'Unauthorized' });
@@ -28,7 +33,25 @@ export default async function handler(req, res) {
           trackName: friend.lastPlayedTrackName,
           artistName: friend.lastPlayedTrackArtist,
           albumImage: friend.lastPlayedTrackAlbumImage,
-        }
+        },
+        topTracks: [
+          {
+            trackName: friend.topTrack1Name,
+            albumImage: friend.topTrack1AlbumImage
+          },
+          {
+            trackName: friend.topTrack2Name,
+            albumImage: friend.topTrack2AlbumImage
+          },
+          {
+            trackName: friend.topTrack3Name,
+            albumImage: friend.topTrack3AlbumImage
+          },
+          {
+            trackName: friend.topTrack4Name,
+            albumImage: friend.topTrack4AlbumImage
+          }
+        ]
       }));
 
       return res.status(200).json(friendsData);
