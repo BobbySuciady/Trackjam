@@ -4,7 +4,10 @@ import User from '../../../models/User';
 import { getLastPlayedTrack, getTodayListeningMinutes } from '../../../lib/spotify';
 
 export default async function handler(req, res) {
-    const session = await getSession({ req });
+    const body = {...req.body} ;
+  req.body = null ;
+  const session = await getSession({ req:req });
+  req.body = body ;
 
     if (!session) {
         return res.status(401).json({ message: 'Unauthorized' });
@@ -45,6 +48,27 @@ export default async function handler(req, res) {
             spotifyId: currentUser.spotifyId,
             points: currentUser.points,
             listeningMinutes: currentUser.listeningMinutes,
+            lastPlayedTrackName: currentUser. lastPlayedTrackName,
+            lastPlayedTrackAlbumImage: currentUser.lastPlayedTrackAlbumImage,
+            lastPlayedTrackArtist : currentUser.lastPlayedTrackArtist,
+            topTracks: [
+                {
+                  trackName: currentUser.topTrack1Name,
+                  albumImage: currentUser.topTrack1AlbumImage
+                },
+                {
+                  trackName: currentUser.topTrack2Name,
+                  albumImage: currentUser.topTrack2AlbumImage
+                },
+                {
+                  trackName: currentUser.topTrack3Name,
+                  albumImage: currentUser.topTrack3AlbumImage
+                },
+                {
+                  trackName: currentUser.topTrack4Name,
+                  albumImage: currentUser.topTrack4AlbumImage
+                }
+              ]
         });
     } catch (error) {
         console.error('Error fetching user data:', error);

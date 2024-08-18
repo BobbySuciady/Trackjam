@@ -4,7 +4,10 @@ import { getSession } from 'next-auth/react';
 import User from '../../../models/User';
 
 export default async function handler(req, res) {
-  const session = await getSession({ req });
+  const body = {...req.body} ;
+  req.body = null ;
+  const session = await getSession({ req:req });
+  req.body = body ;
 
   if (!session) {
     return res.status(401).json({ message: 'Unauthorized' });
