@@ -52,7 +52,7 @@ export default function HomePage() {
                 className="bg-green-600 text-white py-2 px-6 rounded-lg text-lg w-full"
                 onClick={() => signIn('spotify')}
               >
-                Sign up with Spotify
+                Sign in with Spotify
               </button>
               <button 
                 className="bg-gray-400 text-white py-2 px-6 rounded-lg text-lg w-full"
