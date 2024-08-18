@@ -7,6 +7,10 @@
 Why wait for Spotify Wrapped on December when you can do it everyday?!
 Flex your superior music taste on-demand and prove that you are the GOAT!
 
+## What it does 
+
+TrackJam is an innovative app that transforms your Spotify listening habits into a fun and competitive experience. It tracks how many minutes you spend listening to music each day and converts those minutes into points, allowing you to compete with friends on a leaderboard. You can send song Quests to your friends, and if they listen to the song, both of you earn points, adding a playful twist to discovering new music. The app also keeps you connected by letting you see what songs your friends last played and their favorite tracks. While others wait for their annual Spotify Wrapped, TrackJam offers a gamified version every day, turning your music listening into a social, everyday adventure.
+
 ## Main Features:
 
 + Integrated with your spotify (login & data)
@@ -15,7 +19,7 @@ Flex your superior music taste on-demand and prove that you are the GOAT!
 
 ## Test the WebApp 🚀
 
-1. Go to "website here" (preferably in incognito browser)
+1. Go to https://catalysttrackjamfinal.vercel.app/ (preferably in incognito browser)
 2. Press "Connect with Spotify"
 3. Log in to spotify using the following test account --> e: catalystwinner@gmail.com p: TrackJam!!
 4. Compare your music stats with your friends and see how much better you are!
