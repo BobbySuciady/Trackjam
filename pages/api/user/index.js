@@ -1,4 +1,4 @@
-// pages/api/user/index.js
+//  pages/api/user/index.js
 import { getSession } from 'next-auth/react';
 import User from '../../../models/User';
 import { getLastPlayedTrack, getTodayListeningMinutes } from '../../../lib/spotify';
