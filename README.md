@@ -18,6 +18,8 @@ TrackJam is an innovative app that transforms your Spotify listening habits into
 + Point leaderboard system based on your daily minutes listened
 + Get more points when you recommend music to your friends
 
+![TrackJam](https://github.com/user-attachments/assets/e72e2bba-5d8c-48e8-be4a-9cf6fae1500a)
+
 ## Test the WebApp 🚀 (on progress)
 
 1. Go to https://catalysttrackjamfinal.vercel.app/ (preferably in incognito browser)
